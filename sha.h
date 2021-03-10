@@ -148,7 +148,7 @@ struct SHA {
 
         length_high = length_low = 0;
 
-        for (int i = 0, j = WORD_SIZE * 8 - 8; i < HASH_SIZE; ++i, j -= 8)
+        for (int i = 0, j = -8; i < HASH_SIZE; ++i, j -= 8)
             digest[i] = state[i / WORD_SIZE] >> (j & ((WORD_SIZE * 8) - 1));
 
         return true;
