@@ -46,10 +46,10 @@ void test(const Pair *data, size_t num)
 {
     print_sha_info<T>();
 
-    SHA<T> sha;
+    SHA<T>  sha;
 
-    uint8_t digest[SHA<T>::HASH_SIZE + 1] = {};
-    char result[SHA<T>::HASH_SIZE * 2 + 1] = {};
+    uint8_t digest[SHA<T>::HASH_SIZE + 1]       = {};
+    char    result[SHA<T>::HASH_SIZE * 2 + 1]   = {};
 
     for (int i = 0; i < num; ++i) {
         printf("Test:     '%s'\n", data[i].msg);
@@ -68,11 +68,7 @@ void test(const Pair *data, size_t num)
             printf("result error\n");
         }
         printf("Expected: %s\n", data[i].expected);
-
-        if (strcmp(data[i].expected, result))
-            printf("Matches : no\n\n");
-        else
-            printf("Matches : yes\n\n");
+        printf("Matches : %s\n\n", strcmp(data[i].expected, result) ? "no" : "yes");
     }
 }
     
