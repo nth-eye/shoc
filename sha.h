@@ -24,15 +24,12 @@ constexpr uint32_t Sum_1(uint32_t x)     { return ror(x, 6)  ^ ror(x, 11) ^ ror(
 constexpr uint64_t Sum_0(uint64_t x)     { return ror(x, 28) ^ ror(x, 34) ^ ror(x, 39); }
 constexpr uint64_t Sum_1(uint64_t x)     { return ror(x, 14) ^ ror(x, 18) ^ ror(x, 41); }
 
-constexpr int WORD32_FLAG       = 0x1000;
-constexpr int WORD64_FLAG       = 0x2000;
-constexpr int WORD_SIZE_MASK    = WORD32_FLAG | WORD64_FLAG;
-constexpr int HASH_SIZE_MASK    = 0x0FFF;
+constexpr int WORD64_FLAG = 0x1000;
 
 enum SHA_Type {
-    SHA_1       = WORD32_FLAG | 160,
-    SHA_224     = WORD32_FLAG | 224,
-    SHA_256     = WORD32_FLAG | 256,
+    SHA_1       = 160,
+    SHA_224     = 224,
+    SHA_256     = 256,
     SHA_384     = WORD64_FLAG | 384,
     SHA_512     = WORD64_FLAG | 512,
     SHA_512_224 = WORD64_FLAG | 224,
@@ -48,11 +45,11 @@ template<SHA_Type T>
 struct SHA {
 
     using byte = uint8_t;
-    using word = typename word_size<T & WORD_SIZE_MASK>::type;
+    using word = typename word_size<T & WORD64_FLAG>::type;
 
     static constexpr size_t WORD_SIZE       = sizeof(word);
-    static constexpr size_t BLOCK_SIZE      = (T & WORD_SIZE_MASK) / 8 / 8;
-    static constexpr size_t HASH_SIZE       = (T & HASH_SIZE_MASK) / 8;
+    static constexpr size_t BLOCK_SIZE      =  T &  WORD64_FLAG ? 128 : 64;
+    static constexpr size_t HASH_SIZE       = (T & ~WORD64_FLAG) / 8;
     static constexpr size_t STATE_SIZE      = T == SHA_1 ? 5 : 8;
     static constexpr size_t LEN_START_BYTE  = BLOCK_SIZE - WORD_SIZE * 2;
 
