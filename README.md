@@ -2,8 +2,8 @@
 
 ## Descryption
 
-This is a header only templated implementation of SHA-1 and SHA-2 family algorithm in C++11.
-Library supports all standard algorithm versions which are mentioned in [FIPS 180-4][1]: 
+This is a header-only templated implementation of SHA-1 and SHA-2 family algorithms in C++11.
+Library supports all standard algorithms versions which are mentioned in [FIPS 180-4][1]: 
 SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224 and SHA-512/256. It's intended for simple
 and convenient usage within any project, even in embedded devices. There is no standard library 
 dependencies except for `cstdint` and `cstddef` for `size_t` and fixed-width integers.
