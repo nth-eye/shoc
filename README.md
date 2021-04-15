@@ -12,7 +12,7 @@ big-endian platforms is not tested!**
 ## How to use
 
 As in [openssl][2] library, typical `init() -> update() -> final()` API is used. To instantiate
-`SHA<>` object with appropriate `SHA_Type` enum. For example `SHA_1`: 
+`SHA<>` object use appropriate `SHA_Type` enum. For example `SHA_1`: 
 
 ```cpp
 using SHA_t = SHA<SHA_1>;
