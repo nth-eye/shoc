@@ -6,14 +6,15 @@ This is a header-only templated implementation of SHA-1 and SHA-2 family algorit
 Library supports all standard algorithms versions which are mentioned in [FIPS 180-4][1]: 
 SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224 and SHA-512/256. It's intended for simple
 and convenient usage within any project, even in embedded devices. There is no standard library 
-dependencies except for `cstdint` and `cstddef` for `size_t` and fixed-width integers.
+dependencies except for `cstdint` and `cstddef` for `size_t` and fixed-width integers. **Behavior on
+big-endian platforms is not tested!**
 
 ## How to use
 
 As in [openssl][2] library, typical `init() -> update() -> final()` API is used. To instantiate
 `SHA<>` object with appropriate `SHA_Type` enum. For example `SHA_1`: 
 
-```
+```сpp
 using SHA_t = SHA<SHA_1>;
 
 SHA_t sha;
