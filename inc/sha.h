@@ -57,7 +57,7 @@ struct SHA {
     {
     #define INIT_HASH(...) {                        \
         constexpr uint64_t h[] = {__VA_ARGS__};     \
-        for (int i = 0; i < STATE_SIZE; ++i)        \
+        for (size_t i = 0; i < STATE_SIZE; ++i)        \
             state[i] = h[i]; }
 
         switch (T) {
@@ -106,7 +106,7 @@ struct SHA {
 
         length_high = length_low = 0;
 
-        for (int i = 0, j = -8; i < HASH_SIZE; ++i, j -= 8)
+        for (int i = 0, j = -8; i < (int) HASH_SIZE; ++i, j -= 8)
             digest[i] = state[i / WORD_SIZE] >> (j & ((WORD_SIZE * 8) - 1));
 
         return true;
@@ -124,7 +124,7 @@ private:
         while (block_idx < LEN_START_BYTE)
             block[block_idx++] = 0;
 
-        for (int i = 0, j = 0; i < WORD_SIZE; ++i, j += 8) {
+        for (size_t i = 0, j = 0; i < WORD_SIZE; ++i, j += 8) {
             block[BLOCK_SIZE - 1 - i]               = length_low  >> j;
             block[BLOCK_SIZE - 1 - i - WORD_SIZE]   = length_high >> j;
         }
@@ -139,18 +139,18 @@ private:
         word w[N_WORDS];
         word var[STATE_SIZE];
         
-        for (int i = 0; i < STATE_SIZE; ++i) 
+        for (size_t i = 0; i < STATE_SIZE; ++i) 
             var[i] = state[i];
 
         if (WORD_SIZE == 4) {
-            for (int t = 0; t < 16; ++t) {
+            for (size_t t = 0; t < 16; ++t) {
                 w[t]  = block[t * 4]     << 24;
                 w[t] |= block[t * 4 + 1] << 16;
                 w[t] |= block[t * 4 + 2] << 8;
                 w[t] |= block[t * 4 + 3];
             }
         } else {
-            for (int t = 0; t < 16; ++t) {
+            for (size_t t = 0; t < 16; ++t) {
                 w[t]  = word(block[t * 8])     << 56;
                 w[t] |= word(block[t * 8 + 1]) << 48;
                 w[t] |= word(block[t * 8 + 2]) << 40;
@@ -163,7 +163,7 @@ private:
         }
 
     #define SHA_1_ROUND(start, end, K, ...)                                 \
-        for (int t = start; t < end; ++t) {                                 \
+        for (size_t t = start; t < end; ++t) {                                 \
             word tmp = rol(var[a], 5) + var[e] + w[t] + K + (__VA_ARGS__);  \
             var[e] = var[d];                                                \
             var[d] = var[c];                                                \
@@ -174,9 +174,9 @@ private:
 
     #define SHA_2_ROUND(...) {                                                              \
         constexpr uint64_t K[] = {__VA_ARGS__};                                             \
-        for (int t = 16; t < N_WORDS; ++t)                                                  \
+        for (size_t t = 16; t < N_WORDS; ++t)                                                  \
             w[t] = Sigma_1(w[t-2]) + w[t-7] + Sigma_0(w[t-15]) + w[t-16];                   \
-        for (int t = 0; t < N_WORDS; ++t) {                                                 \
+        for (size_t t = 0; t < N_WORDS; ++t) {                                                 \
             word tmp1 = var[h] + Sum_1(var[e]) + Ch(var[e], var[f], var[g]) + K[t] + w[t];  \
             word tmp2 = Sum_0(var[a]) + Maj(var[a], var[b], var[c]);                        \
             var[h] = var[g];                                                                \
@@ -191,7 +191,7 @@ private:
 
         switch (T) {
             case SHA_1:
-                for (int t = 16; t < N_WORDS; ++t)
+                for (size_t t = 16; t < N_WORDS; ++t)
                     w[t] = rol(w[t-3] ^ w[t-8] ^ w[t-14] ^ w[t-16], 1);
                 SHA_1_ROUND(0,  20, 0x5a827999, Ch(var[b], var[c], var[d]))
                 SHA_1_ROUND(20, 40, 0x6ed9eba1, Parity(var[b], var[c], var[d]))
@@ -238,7 +238,7 @@ private:
                 break;
         }
 
-        for (int i = 0; i < STATE_SIZE; ++i)
+        for (size_t i = 0; i < STATE_SIZE; ++i)
             state[i] += var[i];
 
         block_idx = 0;

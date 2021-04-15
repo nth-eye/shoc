@@ -20,12 +20,12 @@ template<SHA_Type T>
 constexpr void print_sha_info()
 {
     printf("%s              \n\
-        word:    %d\tbits   \n\
-        block:   %d\tbytes  \n\
-        hash:    %d\tbytes  \n\
-        state:   %d\twords  \n\
-        pad end: %d\tbyte   \n\
-        sizeof:  %d\tbytes  \n\
+        word:    %lu\tbits   \n\
+        block:   %lu\tbytes  \n\
+        hash:    %lu\tbytes  \n\
+        state:   %lu\twords  \n\
+        pad end: %lu\tbyte   \n\
+        sizeof:  %lu\tbytes  \n\
         \n",                        
         hash_name(T),            
         SHA<T>::WORD_SIZE * 8,
@@ -51,7 +51,7 @@ void test(const Pair *data, size_t num)
     uint8_t digest[SHA<T>::HASH_SIZE + 1]       = {};
     char    result[SHA<T>::HASH_SIZE * 2 + 1]   = {};
 
-    for (int i = 0; i < num; ++i) {
+    for (size_t i = 0; i < num; ++i) {
         printf("Test:     '%s'\n", data[i].msg);
 
         sha.init();
@@ -61,7 +61,7 @@ void test(const Pair *data, size_t num)
         
         if (sha.final(digest)) {
             printf("Result:   ");
-            for (int i = 0; i < SHA<T>::HASH_SIZE ; ++i)
+            for (size_t i = 0; i < SHA<T>::HASH_SIZE ; ++i)
                 sprintf(&result[i * 2], "%02x", digest[i]);
             printf("%s\n", result);
         } else {
