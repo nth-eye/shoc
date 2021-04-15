@@ -11,7 +11,7 @@ dependencies except for `cstdint` and `cstddef` for `size_t` and fixed-width int
 ## How to use
 
 As in [openssl][2] library, typical `init() -> update() -> final()` API is used. To instantiate
-`SHA<>` object use appropriate `SHA_Type` enum. For example `SHA_1`: 
+`SHA<>` object with appropriate `SHA_Type` enum. For example `SHA_1`: 
 
 ```
 using SHA_t = SHA<SHA_1>;
