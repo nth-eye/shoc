@@ -48,8 +48,8 @@ void test(const Pair *data, size_t num)
 
     SHA<T>  sha;
 
-    uint8_t digest[SHA<T>::HASH_SIZE + 1]       = {};
-    char    result[SHA<T>::HASH_SIZE * 2 + 1]   = {};
+    uint8_t digest[SHA<T>::HASH_SIZE]       = {};
+    char    result[SHA<T>::HASH_SIZE * 2]   = {};
 
     for (size_t i = 0; i < num; ++i) {
         printf("Test:     '%s'\n", data[i].msg);

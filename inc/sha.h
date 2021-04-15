@@ -163,7 +163,7 @@ private:
         }
 
     #define SHA_1_ROUND(start, end, K, ...)                                 \
-        for (size_t t = start; t < end; ++t) {                                 \
+        for (size_t t = start; t < end; ++t) {                              \
             word tmp = rol(var[a], 5) + var[e] + w[t] + K + (__VA_ARGS__);  \
             var[e] = var[d];                                                \
             var[d] = var[c];                                                \
@@ -174,9 +174,9 @@ private:
 
     #define SHA_2_ROUND(...) {                                                              \
         constexpr uint64_t K[] = {__VA_ARGS__};                                             \
-        for (size_t t = 16; t < N_WORDS; ++t)                                                  \
+        for (size_t t = 16; t < N_WORDS; ++t)                                               \
             w[t] = Sigma_1(w[t-2]) + w[t-7] + Sigma_0(w[t-15]) + w[t-16];                   \
-        for (size_t t = 0; t < N_WORDS; ++t) {                                                 \
+        for (size_t t = 0; t < N_WORDS; ++t) {                                              \
             word tmp1 = var[h] + Sum_1(var[e]) + Ch(var[e], var[f], var[g]) + K[t] + w[t];  \
             word tmp2 = Sum_0(var[a]) + Maj(var[a], var[b], var[c]);                        \
             var[h] = var[g];                                                                \
