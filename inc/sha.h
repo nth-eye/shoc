@@ -57,7 +57,7 @@ struct SHA {
     {
     #define INIT_HASH(...) {                        \
         constexpr uint64_t h[] = {__VA_ARGS__};     \
-        for (size_t i = 0; i < STATE_SIZE; ++i)        \
+        for (size_t i = 0; i < STATE_SIZE; ++i)     \
             state[i] = h[i]; }
 
         switch (T) {
