@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <cstddef>
 
+namespace sha {
+
 template <class T>
 constexpr T rol(T val, int shift)   { return (val << shift) | (val >> ((sizeof(T) * 8) - shift)); }
 template <class T>
@@ -75,22 +77,21 @@ struct SHA {
         }
         block_idx = length_high = length_low = 0;
     }
-    bool update(const byte *msg, size_t len)
+    bool update(const void *data, size_t len)
     {
+        const uint8_t *p = (uint8_t*) data;
+
         while (len--) {
 
-            block[block_idx++] = *msg;
-            length_low += 8;
+            block[block_idx++] = *p++;
 
-            if (length_low == 0) {
-                length_high++;
-                if (length_high == 0)
-                    return false; // Too long msg. ERROR
+            if ((length_low  += 8)  == 0 && 
+                (length_high += 1)  == 0) 
+            {
+                return false;
             }
             if (block_idx == BLOCK_SIZE)
                 transform();
-
-            ++msg;
         }
         return true;
     }
@@ -99,9 +100,9 @@ struct SHA {
         if (!digest)
             return false;
 
-        pad_msg();
+        pad();
         
-        for (auto &byte : block)
+        for (auto &byte : block) // memset(block, 0, sizeof(block));
             byte = 0;
 
         length_high = length_low = 0;
@@ -112,7 +113,7 @@ struct SHA {
         return true;
     }
 private:
-    void pad_msg()
+    void pad()
     {
         block[block_idx++] = 0x80;
 
@@ -251,4 +252,6 @@ private:
     byte block_idx;
 };
 
-#endif // SHA_H
+}
+
+#endif
