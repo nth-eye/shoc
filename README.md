@@ -1,4 +1,6 @@
-# SHA-cpp
+# Hash-cpp
+
+# ATTENTION, following README is out of date!
 
 ## Descryption
 
