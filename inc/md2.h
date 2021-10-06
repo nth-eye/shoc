@@ -19,6 +19,9 @@ struct MD2 {
     }
     bool update(const void *data, size_t len)
     {
+        if (!data || !len)
+            return false;
+            
         const uint8_t *p = (uint8_t*) data;
 
         while (len--) {
@@ -46,11 +49,8 @@ struct MD2 {
 private:
     void pad()
     {
-        int pad_len = 16 - block_idx;
-
-        for (int i = 0; i < pad_len; ++i)
-            block[block_idx++] = pad_len;
-
+        int pad = 16 - block_idx;
+        memset(block + block_idx, pad, pad);
         transform();
     }
     void transform()

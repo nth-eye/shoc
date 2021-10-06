@@ -1,10 +1,20 @@
 #include <cstring>
 #include <cstdio>
+#include <ctime>
 #include "sha.h"
 #include "md2.h"
+#include "md4.h"
 #include "sha1.h"
 
 #define SIZE(x) (sizeof(x) / sizeof(x[0]))
+#define EXEC_TIME(N, fn, ...)       \
+{                                   \
+    clock_t begin = clock();        \
+    for (size_t i = 0; i < N; ++i)  \
+        fn(__VA_ARGS__);            \
+    clock_t end = clock();          \
+    printf("[" #fn "] " #N " avg exec time: %lu clock_t \n", (end - begin) / N); \
+}
 
 struct Pair {
     const char *msg;
@@ -47,26 +57,119 @@ void test(const Pair *data, size_t num)
 
 using namespace sha;
 using namespace md2;
+using namespace md4;
 using namespace sha1;
     
 int main()
 {
-    // ANCHOR: SHA
+    // ANCHOR: MD2
 
-    const Pair sha_1_test[] = {
-        { "abc",
-            "a9993e364706816aba3e25717850c26c9cd0d89d" },
+    const Pair md2_test[] = {
         { "",
-            "da39a3ee5e6b4b0d3255bfef95601890afd80709" },
-        { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-            "84983e441c3bd26ebaae4aa1f95129e5e54670f1" },
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
-            "a49b2446a02c645bf419f995b67091253a04a259" },
-        { "The quick brown fox jumps over the lazy dog",
-            "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12" },
-        { "The quick brown fox jumps over the lazy cog", 
-            "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3" },
+            "8350e5a3e24c153df2275c9f80692773" },
+        { "a",
+            "32ec01ec4a6dac72c0ab96fb34c0b5d1" },
+        { "abc",
+            "da853b0d3f88d99b30283a69e6ded6bb" },
+        { "message digest",
+            "ab4f496bfb2a530b219ff33031fe06b0" },
+        { "abcdefghijklmnopqrstuvwxyz",
+            "4e8ddff3650292ab5a4108c3aa47940b" },
+        { "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+            "da33def2a42df13975352846c30338cd" },
+        { "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
+            "d5976f79d83d3a0dc9806c3c66f3efd8" },
     };
+
+    test<MD2>(md2_test, SIZE(md2_test));
+
+    // ANCHOR: MD4
+
+    const Pair md4_test[] = {
+        { "",
+            "31d6cfe0d16ae931b73c59d7e0c089c0" },
+        { "a",
+            "bde52cb31de33e46245e05fbdbd6fb24" },
+        { "abc",
+            "a448017aaf21d8525fc10ae87aa6729d" },
+        { "message digest",
+            "d9130a8164549fe818874806e1c7014b" },
+        { "abcdefghijklmnopqrstuvwxyz",
+            "d79e1c308aa5bbcdeea8ed63df412da9" },
+        { "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+            "043f8582f241db351ce627e153e7f0e4" },
+        { "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
+            "e33b4ddc9c38f2199c3e7b164fcc0536" },
+    };
+
+    test<MD4>(md4_test, SIZE(md4_test));
+
+    // // ANCHOR: SHA1
+
+    // const Pair sha_1_test[] = {
+    //     { "abc",
+    //         "a9993e364706816aba3e25717850c26c9cd0d89d" },
+    //     { "",
+    //         "da39a3ee5e6b4b0d3255bfef95601890afd80709" },
+    //     { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+    //         "84983e441c3bd26ebaae4aa1f95129e5e54670f1" },
+    //     { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+    //         "a49b2446a02c645bf419f995b67091253a04a259" },
+    //     { "The quick brown fox jumps over the lazy dog",
+    //         "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12" },
+    //     { "The quick brown fox jumps over the lazy cog", 
+    //         "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3" },
+    // };
+
+    // test<SHA1>(sha_1_test, SIZE(sha_1_test));
+
+
+
+    // const char aaa[] = "aaaaaaaaaaaaaaaaa";
+    // constexpr auto N = 10000000;
+
+    // SHA1 sha1;
+
+    // uint8_t digest[SHA1::HASH_SIZE];
+
+    // clock_t begin = clock();
+    // for (size_t i = 0; i < N; ++i) {
+    //     sha1.init();
+    //     sha1.update(aaa, sizeof(aaa));
+    //     sha1.final(digest);
+    // }
+    // clock_t end = clock();
+
+    // printf("1) digest %02x \n", digest[6]);
+    // printf("1) %d avg exec time: %lu clock_t \n", N, (end - begin));
+
+
+}
+
+        // if (block_idx > LEN_START_BYTE) {            
+        //     memset(block + block_idx, 0, BLOCK_SIZE - block_idx);
+        //     transform();
+        // }
+        // memset(block, 0, LEN_START_BYTE);
+
+
+
+            // ANCHOR: SHA
+
+    // const Pair sha_1_test[] = {
+    //     { "abc",
+    //         "a9993e364706816aba3e25717850c26c9cd0d89d" },
+    //     { "",
+    //         "da39a3ee5e6b4b0d3255bfef95601890afd80709" },
+    //     { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+    //         "84983e441c3bd26ebaae4aa1f95129e5e54670f1" },
+    //     { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+    //         "a49b2446a02c645bf419f995b67091253a04a259" },
+    //     { "The quick brown fox jumps over the lazy dog",
+    //         "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12" },
+    //     { "The quick brown fox jumps over the lazy cog", 
+    //         "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3" },
+    // };
 
     // const Pair sha_224_test[] = {
     //     { "abc",
@@ -141,29 +244,3 @@ int main()
     // test<SHA<SHA_512>>      (sha_512_test,      SIZE(sha_512_test));
     // test<SHA<SHA_512_224>>  (sha_512_224_test,  SIZE(sha_512_224_test));
     // test<SHA<SHA_512_256>>  (sha_512_256_test,  SIZE(sha_512_256_test));
-
-    // // ANCHOR: MD2
-
-    // const Pair md2_test[] = {
-    //     { "",
-    //         "8350e5a3e24c153df2275c9f80692773" },
-    //     { "a",
-    //         "32ec01ec4a6dac72c0ab96fb34c0b5d1" },
-    //     { "abc",
-    //         "da853b0d3f88d99b30283a69e6ded6bb" },
-    //     { "message digest",
-    //         "ab4f496bfb2a530b219ff33031fe06b0" },
-    //     { "abcdefghijklmnopqrstuvwxyz",
-    //         "4e8ddff3650292ab5a4108c3aa47940b" },
-    //     { "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-    //         "da33def2a42df13975352846c30338cd" },
-    //     { "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
-    //         "d5976f79d83d3a0dc9806c3c66f3efd8" },
-    // };
-
-    // test<MD2>(md2_test, SIZE(md2_test));
-
-    // ANCHOR: SHA1
-
-    test<SHA1>(sha_1_test, SIZE(sha_1_test));
-}

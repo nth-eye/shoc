@@ -15,13 +15,12 @@ struct SHA1 {
     static constexpr size_t HASH_SIZE       = 20;   // In bytes
     static constexpr size_t STATE_SIZE      = 5;    // In words
     static constexpr size_t BLOCK_SIZE      = 64;   // In bytes
-    static constexpr size_t LEN_START_BYTE  = BLOCK_SIZE - 8;
+    static constexpr size_t LENGTH_START    = BLOCK_SIZE - 8;
 
-    constexpr word rol(word val, int shift)         { return (val << shift) | (val >> (32 - shift)); }
-    constexpr word ror(word val, int shift)         { return (val >> shift) | (val << (32 - shift)); }
-    constexpr word ch(word x, word y, word z)       { return (x & y) ^ (~x & z); }
-    constexpr word maj(word x, word y, word z)      { return (x & y) ^ (x & z) ^ (y & z); }
-    constexpr word parity(word x, word y, word z)   { return x ^ y ^ z; }
+    static constexpr word rol(word x, int shift)            { return (x << shift) | (x >> (32 - shift)); }
+    static constexpr word ch(word x, word y, word z)        { return (x & y) ^ (~x & z); }
+    static constexpr word maj(word x, word y, word z)       { return (x & y) ^ (x & z) ^ (y & z); }
+    static constexpr word parity(word x, word y, word z)    { return x ^ y ^ z; }
 
     void init()
     {
@@ -33,6 +32,9 @@ struct SHA1 {
     }
     bool update(const void *data, size_t len)
     {
+        if (!data || !len)
+            return false;
+
         const uint8_t *p = (uint8_t*) data;
 
         while (len--) {
@@ -55,13 +57,6 @@ struct SHA1 {
             return false;
 
         pad();
-        
-        memset(block, 0, sizeof(block));
-
-        length_high = length_low = 0;
-
-        // for (int i = 0, j = -8; i < (int) HASH_SIZE; ++i, j -= 8)
-        //     digest[i] = state[i >> 2] >> (j & 31);
 
         for (size_t i = 0, j = 0; i < STATE_SIZE; ++i, j += 4) {
             digest[j + 0] = state[i] >> 24;
@@ -69,6 +64,8 @@ struct SHA1 {
             digest[j + 2] = state[i] >> 8;
             digest[j + 3] = state[i] >> 0;
         }
+        memset(this, 0, sizeof(*this));
+
         return true;
     }
 private:
@@ -76,13 +73,11 @@ private:
     {
         block[block_idx++] = 0x80;
 
-        if (block_idx > LEN_START_BYTE) {
-            while (block_idx < BLOCK_SIZE)
-                block[block_idx++] = 0;
+        if (block_idx > LENGTH_START) {
+            memset(block + block_idx, 0, BLOCK_SIZE - block_idx);
             transform();
-        } 
-        while (block_idx < LEN_START_BYTE)
-            block[block_idx++] = 0;
+        }
+        memset(block + block_idx, 0, LENGTH_START - block_idx);
 
         for (size_t i = 0, j = 0; i < 4; ++i, j += 8) {
             block[BLOCK_SIZE - 1 - i] = length_low  >> j;
@@ -92,7 +87,7 @@ private:
     }
     void transform()
     {
-        enum { a, b, c, d, e, f, g, h };
+        enum { a, b, c, d, e };
 
         word w[80];
         word var[STATE_SIZE];
