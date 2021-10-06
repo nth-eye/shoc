@@ -24,7 +24,7 @@ struct MD4 {
 
     void init()
     {
-        constexpr word state_0[] = { 0x67452301u, 0xefcdab89u, 0x98badcfeu, 0x10325476u };
+        constexpr word state_0[] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 };
 
         memcpy(state, state_0, sizeof(state));
 
@@ -142,7 +142,6 @@ private:
         FF(c, d, a, b, buf[14], S13); /* 15 */
         FF(b, c, d, a, buf[15], S14); /* 16 */
 
-        /* Round 2 */
         GG(a, b, c, d, buf[ 0], S21); /* 17 */
         GG(d, a, b, c, buf[ 4], S22); /* 18 */
         GG(c, d, a, b, buf[ 8], S23); /* 19 */
@@ -160,7 +159,6 @@ private:
         GG(c, d, a, b, buf[11], S23); /* 31 */
         GG(b, c, d, a, buf[15], S24); /* 32 */
 
-        /* Round 3 */
         HH(a, b, c, d, buf[ 0], S31); /* 33 */
         HH(d, a, b, c, buf[ 8], S32); /* 34 */
         HH(c, d, a, b, buf[ 4], S33); /* 35 */
