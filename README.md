@@ -1,58 +1,53 @@
-# Hash-cpp
+# hash
 
-# ATTENTION, following README is out of date!
-
-## Descryption
-
-This is a header-only templated implementation of SHA-1 and SHA-2 family algorithms in C++11.
-Library supports all standard algorithms versions which are mentioned in [FIPS 180-4][1]: 
-SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224 and SHA-512/256. It's intended for simple
-and convenient usage within any project, even in embedded devices. There is no standard library 
-dependencies except for `cstdint` and `cstddef` for `size_t` and fixed-width integers. **Behavior on
-big-endian platforms is not tested!**
+This is a header-only implementation of different hashing algorithms in C++11 (templates used). Currently
+only SHA and MD family. Library supports all standard SHA-1 and SHA-2 algorithms versions which are 
+mentioned in [FIPS 180-4][1]: SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224 and SHA-512/256. 
+It's intended for simple and convenient usage within any project, even in embedded devices. There is 
+no standard library dependencies except `cstdint`, `cstddef` and `cstring` for `memcpy`.
+**Behavior on big-endian platforms is not tested!**
 
 ## How to use
 
-As in [openssl][2] library, typical `init() -> update() -> final()` API is used. To instantiate
-`SHA<>` object use appropriate `SHA_Type` enum. For example `SHA_1`: 
+As in [openssl][2] library, typical `init() -> update() -> final()` API is used. 
 
 ```cpp
-using SHA_t = SHA<SHA_1>;
+using hash_t = SHA_2<SHA_256>;
 
-SHA_t sha;
+hash_t hash;
 
-uint8_t digest[SHA_t::HASH_SIZE];
+uint8_t digest[hash_t::HASH_SIZE];
 
 const char *data = "data to be hashed";
 
-sha.init();
-sha.update((const uint8_t*) data, strlen(data));
-sha.final(digest);
+hash.init();
+hash.update(data, strlen(data));
+hash.final(digest);
 
 // Do what you want with digest...
 // Then another
 
 const uint8_t data_2[] = { 0xef, 0xbe, 0xad, 0xde };
 
-sha.init();
-sha.update(data_2, 4);
-sha.final(digest);
+hash.init();
+hash.update(data_2, 4);
+hash.final(digest);
 
 // Or do it in many update() cycles
 
 const char *data_3 = "data to be hashed";
 const uint8_t data_4[] = { 0xef, 0xbe, 0xad, 0xde };
 
-sha.init();
-sha.update((const uint8_t*) data_3, strlen(data_3));
-sha.update(data_4, 4);
-sha.final(digest);
+hash.init();
+hash.update(data_3, strlen(data_3));
+hash.update(data_4, 4);
+hash.final(digest);
 
 // ...
 
 ```
 
-Some tests are written in main.cpp where you can see typical usage.
+Some tests are written in main.cpp where you can also see typical usage.
 
 ## TODO
 
