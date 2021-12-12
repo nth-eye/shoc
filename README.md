@@ -1,10 +1,9 @@
 # hash
 
-This is a header-only implementation of different hashing algorithms in C++11 (templates used). Currently
-only SHA and MD family. Library supports all standard SHA-1 and SHA-2 algorithms versions which are 
-mentioned in [FIPS 180-4][1]: SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224 and SHA-512/256. 
-It's intended for simple and convenient usage within any project, even in embedded devices. There is 
-no standard library dependencies except `cstdint`, `cstddef` and `cstring` for `memcpy`.
+This is a header-only implementation of different hashing algorithms in C++11 (templates are used). Currently
+only SHA and MD family. Library supports all standard SHA-1 and SHA-2 algorithms versions which are mentioned 
+in [FIPS 180-4][1]. It's intended for simple and convenient usage within any project, even in embedded devices. 
+There is no standard library dependencies except `cstdint`, `cstddef` and `cstring` for `memcpy`.
 **Behavior on big-endian platforms is not tested!**
 
 ## How to use
