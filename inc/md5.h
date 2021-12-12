@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstring>
 
-namespace md5 {
+namespace creepto {
 
 struct MD5 {
 
@@ -19,9 +19,10 @@ struct MD5 {
 
     void init()
     {
-        constexpr word state_0[] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 };
-
-        memcpy(state, state_0, sizeof(state));
+        state[0] = 0x67452301;
+        state[1] = 0xefcdab89;
+        state[2] = 0x98badcfe;
+        state[3] = 0x10325476;
 
         block_idx = length_high = length_low = 0;
     }

@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstring>
 
-namespace sha2 {
+namespace creepto {
 
 template <class T>
 constexpr T rol(T val, int shift)   { return (val << shift) | (val >> ((sizeof(T) * 8) - shift)); }
@@ -80,7 +80,7 @@ struct SHA2 {
     }
     bool update(const void *data, size_t len)
     {
-        if (!data || !len)
+        if (!data)
             return false;
 
         const uint8_t *p = (uint8_t*) data;

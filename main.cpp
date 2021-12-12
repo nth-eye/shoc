@@ -1,11 +1,13 @@
 #include <cstring>
 #include <cstdio>
 #include <ctime>
+
 #include "md2.h"
 #include "md4.h"
 #include "md5.h"
 #include "sha1.h"
 #include "sha2.h"
+#include "hotp.h"
 
 #define SIZE(x) (sizeof(x) / sizeof(x[0]))
 #define EXEC_TIME(N, fn, ...)       \
@@ -21,6 +23,8 @@ struct Pair {
     const char *msg;
     const char *expected;
 };
+
+using namespace creepto;
 
 template<class Hash>
 void test(const Pair *data, size_t num)
@@ -57,11 +61,45 @@ void test(const Pair *data, size_t num)
     }
 }
 
-using namespace md2;
-using namespace md4;
-using namespace md5;
-using namespace sha1;
-using namespace sha2;
+void hmac_sha_1_test()
+{
+    constexpr const char *key = "key";
+    constexpr const char *msg = "The quick brown fox jumps over the lazy dog";
+    constexpr const char *expected = "de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9";
+
+    printf("Test:    '%s'\n\n", key);
+
+    SHA1        sha;
+    uint8_t     digest[20] = {};
+    char        result[20 * 2] = {};
+
+    hmac(sha, msg, strlen(msg), key, strlen(key), digest);
+
+    printf("Result:   ");
+    for (int i = 0; i < 20; ++i)
+        sprintf(&result[i * 2], "%02x", digest[i]);
+    printf("%s\n", result);
+    printf("Expected: %s\n", expected);
+    printf("Matches:  %s\n\n", strcmp(expected, result) ? "no" : "yes");
+}
+
+void hotp_sha_1_test()
+{
+    SHA1 sha;
+
+    constexpr const char *key = "12345678901234567890";
+    constexpr const uint32_t expected[] = { 755224, 287082, 359152, 969429, 338314, 254676, 287922, 162583, 399871, 520489 };
+
+    printf("Test:    '%s'\n\n", key);
+    for (uint64_t i = 0; i < 10; ++i) {
+
+        uint32_t code = hotp(sha, (uint8_t*) key, strlen(key), i, 6);
+
+        printf("Counter:  %lu\n", i);
+        printf("Result:   %u\n", code);
+        printf("Correct:  %s\n\n", code == expected[i] ? "yes" : "no");
+    }
+}
     
 int main()
 {
@@ -216,6 +254,14 @@ int main()
 
     test<SHA2<SHA_512_256>>(sha_512_256_test, SIZE(sha_512_256_test));
 
+    // ANCHOR: HMAC-SHA-1
+
+    hmac_sha_1_test();
+
+    // ANCHOR: HOTP-SHA-1
+
+    hotp_sha_1_test();
+
     // const char aaa[] = "aaaaaaaaaaaaaaaaa";
     // constexpr auto N = 10000000;
 
@@ -234,11 +280,3 @@ int main()
     // printf("1) digest %02x \n", digest[6]);
     // printf("1) %d avg exec time: %lu clock_t \n", N, (end - begin));
 }
-
-    // test<SHA<SHA_1>>        (sha_1_test,        SIZE(sha_1_test));
-    // test<SHA<SHA_224>>      (sha_224_test,      SIZE(sha_224_test));
-    // test<SHA<SHA_256>>      (sha_256_test,      SIZE(sha_256_test));
-    // test<SHA<SHA_384>>      (sha_384_test,      SIZE(sha_384_test));
-    // test<SHA<SHA_512>>      (sha_512_test,      SIZE(sha_512_test));
-    // test<SHA<SHA_512_224>>  (sha_512_224_test,  SIZE(sha_512_224_test));
-    // test<SHA<SHA_512_256>>  (sha_512_256_test,  SIZE(sha_512_256_test));
