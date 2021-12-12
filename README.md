@@ -51,7 +51,7 @@ Some tests are written in main.cpp where you can also see typical usage.
 
 ## TODO
 
-**_Currently no TODO-s_**
+**_Nothing_**
 
 [1]: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
 [2]: https://github.com/openssl/openssl
