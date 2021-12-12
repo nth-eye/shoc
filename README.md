@@ -12,7 +12,7 @@ embedded devices. There is no standard library dependencies except `cstdint`, `c
 As in [openssl][1] library, typical `init() -> update() -> final()` API is used for hashing objects. 
 
 ```cpp
-using hash_t = SHA_2<SHA_256>;
+using hash_t = SHA2<SHA_256>;
 
 hash_t hash;
 uint8_t digest[hash_t::HASH_SIZE];
