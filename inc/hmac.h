@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace creepto {
+namespace creep {
 
 template<class H>
 constexpr void hmac(H &hash, const void *msg, size_t msg_len, const void *key, size_t key_len, uint8_t *digest)

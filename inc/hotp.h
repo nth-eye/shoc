@@ -3,7 +3,7 @@
 
 #include "hmac.h"
 
-namespace creepto {
+namespace creep {
 
 constexpr int ipow(int base, int exp)
 {

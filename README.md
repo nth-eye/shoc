@@ -1,4 +1,4 @@
-# creepto
+# creep
 
 This is a header-only C++11 implementation (templates are used) of different cryptographic algorithms: hashing, message 
 authentication codes, one-time passwords, etc. It's intended for simple and convenient usage within any project, even in 

@@ -5,52 +5,61 @@
 #include <cstddef>
 #include <cstring>
 
-namespace creepto {
+namespace creep {
 
 struct MD4 {
+
+    static constexpr size_t SIZE = 16;
 
     using byte = uint8_t;
     using word = uint32_t;
 
-    static constexpr size_t HASH_SIZE       = 16;   // In bytes
-    static constexpr size_t STATE_SIZE      = 4;    // In words
-    static constexpr size_t BLOCK_SIZE      = 64;   // In bytes
-    static constexpr size_t LENGTH_START    = BLOCK_SIZE - 8;
+    void init();
+    bool update(const void *in, size_t len);
+    bool final(byte out[SIZE]);
+    bool operator()(const void *in, size_t len, byte out[SIZE]);
+private:
+    void pad();
+    void process();
+
+    static constexpr size_t STATE_SIZE  = 4;    // In words
+    static constexpr size_t BLOCK_SIZE  = 64;   // In bytes
+    static constexpr size_t PAD_START   = BLOCK_SIZE - 8;
 
     static constexpr word rol(word x, int shift)            { return (x << shift) | (x >> (32 - shift)); }
     static constexpr word ch(word x, word y, word z)        { return (x & y) | (~x & z); }
     static constexpr word maj(word x, word y, word z)       { return (x & y) | (x & z) | (y & z); }
     static constexpr word parity(word x, word y, word z)    { return x ^ y ^ z; }
-
-    void init();
-    bool update(const void *data, size_t len);
-    bool final(byte *digest);
-private:
-    void pad();
-    void transform();
     
-    word state[STATE_SIZE];
     word length_low;
     word length_high;
+    word state[STATE_SIZE];
     byte block[BLOCK_SIZE];
     byte block_idx;
 };
 
+bool MD4::operator()(const void *in, size_t len, byte out[SIZE])
+{
+    init();
+    return update(in, len) && final(out);
+}
+
 void MD4::init()
 {
-    constexpr word state_0[] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 };
-
-    memcpy(state, state_0, sizeof(state));
+    state[0] = 0x67452301;
+    state[1] = 0xefcdab89;
+    state[2] = 0x98badcfe;
+    state[3] = 0x10325476;
 
     block_idx = length_high = length_low = 0;
 }
 
-bool MD4::update(const void *data, size_t len)
+bool MD4::update(const void *in, size_t len)
 {
-    if (!data)
+    if (!in)
         return false;
 
-    const uint8_t *p = (uint8_t*) data;
+    auto p = static_cast<const uint8_t*>(in);
 
     while (len--) {
 
@@ -60,23 +69,23 @@ bool MD4::update(const void *data, size_t len)
             length_high += 1;
 
         if (block_idx == BLOCK_SIZE)
-            transform();
+            process();
     }
     return true;
 }
 
-bool MD4::final(byte *digest)
+bool MD4::final(byte out[SIZE])
 {
-    if (!digest)
+    if (!out)
         return false;
 
     pad();
 
     for (size_t i = 0, j = 0; i < STATE_SIZE; ++i, j += 4) {
-        digest[j + 0] = state[i] >> 0;
-        digest[j + 1] = state[i] >> 8;
-        digest[j + 2] = state[i] >> 16;
-        digest[j + 3] = state[i] >> 24;
+        out[j + 0] = state[i] >> 0;
+        out[j + 1] = state[i] >> 8;
+        out[j + 2] = state[i] >> 16;
+        out[j + 3] = state[i] >> 24;
     }
     memset(this, 0, sizeof(*this));
 
@@ -87,20 +96,20 @@ void MD4::pad()
 {
     block[block_idx++] = 0x80;
 
-    if (block_idx > LENGTH_START) {
+    if (block_idx > PAD_START) {
         memset(block + block_idx, 0, BLOCK_SIZE - block_idx);
-        transform();
+        process();
     }
-    memset(block + block_idx, 0, LENGTH_START - block_idx);
+    memset(block + block_idx, 0, PAD_START - block_idx);
 
     for (size_t i = 0, j = 0; i < 4; ++i, j += 8) {
         block[BLOCK_SIZE - 8 + i] = length_low  >> j;
         block[BLOCK_SIZE - 4 + i] = length_high >> j;
     }
-    transform();
+    process();
 }
 
-void MD4::transform()
+void MD4::process()
 {
     enum { a, b, c, d };
 
@@ -129,18 +138,20 @@ void MD4::transform()
         var[a] = rol(var[a], s); \
     }
 
-    constexpr int S11 = 3;
-    constexpr int S12 = 7;
-    constexpr int S13 = 11;
-    constexpr int S14 = 19;
-    constexpr int S21 = 3;
-    constexpr int S22 = 5;
-    constexpr int S23 = 9;
-    constexpr int S24 = 13;
-    constexpr int S31 = 3;
-    constexpr int S32 = 9;
-    constexpr int S33 = 11;
-    constexpr int S34 = 15;
+    enum { 
+        S11 = 3,
+        S12 = 7,
+        S13 = 11,
+        S14 = 19,
+        S21 = 3,
+        S22 = 5,
+        S23 = 9,
+        S24 = 13,
+        S31 = 3,
+        S32 = 9,
+        S33 = 11,
+        S34 = 15,
+    };
 
     FF(a, b, c, d, buf[ 0], S11); /* 1 */
     FF(d, a, b, c, buf[ 1], S12); /* 2 */

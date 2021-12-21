@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstring>
 
-namespace creepto {
+namespace creep {
 
 template <class T>
 constexpr T rol(T val, int shift)   { return (val << shift) | (val >> ((sizeof(T) * 8) - shift)); }

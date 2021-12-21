@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstring>
 
-namespace creepto {
+namespace creep {
 
 struct SHA1 {
 
