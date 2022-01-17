@@ -1,8 +1,8 @@
 # creep
 
-This is a header-only C++11 implementation (templates are used) of different cryptographic algorithms: hashing, message 
+This is a header-only C++17 implementation (templates are used) of different cryptographic algorithms: hashing, message 
 authentication codes, one-time passwords, etc. It's intended for simple and convenient usage within any project, even in 
-embedded devices. There is no standard library dependencies except `cstdint`, `cstddef` and `cstring` for `memcpy`.
+embedded devices. There is no standard library dependencies except `cstdint`, `cstddef` and `cstring`.
 **Behavior on big-endian platforms is not tested!**
 
 ## How to use

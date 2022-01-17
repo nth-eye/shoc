@@ -38,12 +38,6 @@ private:
     byte block_idx;
 };
 
-bool MD4::operator()(const void *in, size_t len, byte out[SIZE])
-{
-    init();
-    return update(in, len) && final(out);
-}
-
 void MD4::init()
 {
     state[0] = 0x67452301;
@@ -92,6 +86,12 @@ bool MD4::final(byte out[SIZE])
     return true;
 }
 
+bool MD4::operator()(const void *in, size_t len, byte out[SIZE])
+{
+    init();
+    return update(in, len) && final(out);
+}
+
 void MD4::pad()
 {
     block[block_idx++] = 0x80;
@@ -111,12 +111,11 @@ void MD4::pad()
 
 void MD4::process()
 {
-    enum { a, b, c, d };
-
-    word var[STATE_SIZE];
+    word a = state[0];
+    word b = state[1];
+    word c = state[2];
+    word d = state[3];
     word buf[16];
-
-    memcpy(var, state, sizeof(state));
 
     for (size_t i = 0, j = 0; j < BLOCK_SIZE; ++i, j +=4) {
         buf[i]  = block[j + 0] << 0;
@@ -125,18 +124,17 @@ void MD4::process()
         buf[i] |= block[j + 3] << 24;
     }
 
-    #define FF(a, b, c, d, x, s) { \
-        var[a] += ch(var[b], var[c], var[d]) + x; \
-        var[a] = rol(var[a], s); \
-    }
-    #define GG(a, b, c, d, x, s) { \
-        var[a] += maj(var[b], var[c], var[d]) + x + 0x5a827999; \
-        var[a] = rol(var[a], s); \
-    }
-    #define HH(a, b, c, d, x, s) { \
-        var[a] += parity(var[b], var[c], var[d]) + x + 0x6ed9eba1; \
-        var[a] = rol(var[a], s); \
-    }
+    #define FF(a, b, c, d, x, s) \
+        a += ch(b, c, d) + x; \
+        a = rol(a, s);
+
+    #define GG(a, b, c, d, x, s) \
+        a += maj(b, c, d) + x + 0x5a827999; \
+        a = rol(a, s);
+
+    #define HH(a, b, c, d, x, s) \
+        a += parity(b, c, d) + x + 0x6ed9eba1; \
+        a = rol(a, s);
 
     enum { 
         S11 = 3,
@@ -204,8 +202,10 @@ void MD4::process()
     HH(c, d, a, b, buf[ 7], S33); /* 47 */
     HH(b, c, d, a, buf[15], S34); /* 48 */
 
-    for (size_t i = 0; i < STATE_SIZE; ++i)
-        state[i] += var[i];
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
 
     block_idx = 0;
 }

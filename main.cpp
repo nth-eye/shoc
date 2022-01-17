@@ -2,106 +2,94 @@
 #include <cstdio>
 #include <ctime>
 
-#include "md2.h"
-#include "md4.h"
-#include "md5.h"
 #include "sha1.h"
 #include "sha2.h"
+#include "sha3.h"
 #include "hotp.h"
 
-#define SIZE(x) (sizeof(x) / sizeof(x[0]))
-#define EXEC_TIME(N, fn, ...)       \
-{                                   \
-    clock_t begin = clock();        \
-    for (size_t i = 0; i < N; ++i)  \
-        fn(__VA_ARGS__);            \
-    clock_t end = clock();          \
-    printf("[" #fn "] " #N " avg exec time: %lu clock_t \n", (end - begin) / N); \
-}
+// #define SIZE(x) (sizeof(x) / sizeof(x[0]))
 
-struct Pair {
-    const char *msg;
-    const char *expected;
-};
+// struct Pair {
+//     const char *msg;
+//     const char *expected;
+// };
 
-using namespace creep;
+// using namespace creep;
 
-template<class Hash>
-void test(const Pair *data, size_t num)
-{
-    printf("\n%s \n", __PRETTY_FUNCTION__);
+// template<class Hash>
+// void test(const Pair *data, size_t num)
+// {
+//     printf("\n%s \n", __PRETTY_FUNCTION__);
 
-    Hash hasher;
+//     Hash hasher;
 
-    uint8_t digest[Hash::HASH_SIZE]     = {};
-    char    result[Hash::HASH_SIZE * 2] = {};
+//     uint8_t digest[Hash::HASH_SIZE]     = {};
+//     char    result[Hash::HASH_SIZE * 2] = {};
 
-    for (size_t i = 0; i < num; ++i) {
+//     for (size_t i = 0; i < num; ++i) {
 
-        hasher.init();
+//         hasher.init();
 
-        if (!hasher.update(data[i].msg, strlen(data[i].msg))) {
-            printf("----error update:   '%s'\n", data[i].msg);
-            continue;
-        }
+//         if (!hasher.update(data[i].msg, strlen(data[i].msg))) {
+//             printf("----error update:   '%s'\n", data[i].msg);
+//             continue;
+//         }
 
-        if (!hasher.final(digest)) {
-            printf("----error final:    '%s'\n", data[i].msg);
-            continue;
-        }
+//         if (!hasher.final(digest)) {
+//             printf("----error final:    '%s'\n", data[i].msg);
+//             continue;
+//         }
         
-        for (size_t i = 0; i < sizeof(digest) ; ++i)
-            sprintf(&result[i * 2], "%02x", digest[i]);
+//         for (size_t i = 0; i < sizeof(digest) ; ++i)
+//             sprintf(&result[i * 2], "%02x", digest[i]);
 
-        if (strcmp(data[i].expected, result)) {
-            printf("\n----Test:       '%s'", data[i].msg);
-            printf("\n----Result:     %s", result);
-            printf("\n----Expected:   %s\n", data[i].expected);
-        }
-    }
-}
+//         if (strcmp(data[i].expected, result)) {
+//             printf("\n----Test:       '%s'", data[i].msg);
+//             printf("\n----Result:     %s", result);
+//             printf("\n----Expected:   %s\n", data[i].expected);
+//         }
+//     }
+// }
 
-void hmac_sha_1_test()
-{
-    constexpr const char *key = "key";
-    constexpr const char *msg = "The quick brown fox jumps over the lazy dog";
-    constexpr const char *expected = "de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9";
+// void hmac_sha_1_test()
+// {
+//     constexpr const char *key = "key";
+//     constexpr const char *msg = "The quick brown fox jumps over the lazy dog";
+//     constexpr const char *expected = "de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9";
 
-    printf("Test:    '%s'\n\n", key);
+//     printf("Test:    '%s'\n\n", key);
 
-    SHA1        sha;
-    uint8_t     digest[20] = {};
-    char        result[20 * 2] = {};
+//     SHA1        sha;
+//     uint8_t     digest[20] = {};
+//     char        result[20 * 2] = {};
 
-    hmac(sha, msg, strlen(msg), key, strlen(key), digest);
+//     hmac(sha, msg, strlen(msg), key, strlen(key), digest);
 
-    printf("Result:   ");
-    for (int i = 0; i < 20; ++i)
-        sprintf(&result[i * 2], "%02x", digest[i]);
-    printf("%s\n", result);
-    printf("Expected: %s\n", expected);
-    printf("Matches:  %s\n\n", strcmp(expected, result) ? "no" : "yes");
-}
+//     printf("Result:   ");
+//     for (int i = 0; i < 20; ++i)
+//         sprintf(&result[i * 2], "%02x", digest[i]);
+//     printf("%s\n", result);
+//     printf("Expected: %s\n", expected);
+//     printf("Matches:  %s\n\n", strcmp(expected, result) ? "no" : "yes");
+// }
 
-void hotp_sha_1_test()
-{
-    SHA1 sha;
+// void hotp_sha_1_test()
+// {
+//     SHA1 sha;
 
-    constexpr const char *key = "12345678901234567890";
-    constexpr const uint32_t expected[] = { 755224, 287082, 359152, 969429, 338314, 254676, 287922, 162583, 399871, 520489 };
+//     constexpr const char *key = "12345678901234567890";
+//     constexpr const uint32_t expected[] = { 755224, 287082, 359152, 969429, 338314, 254676, 287922, 162583, 399871, 520489 };
 
-    printf("Test:    '%s'\n\n", key);
-    for (uint64_t i = 0; i < 10; ++i) {
+//     printf("Test:    '%s'\n\n", key);
+//     for (uint64_t i = 0; i < 10; ++i) {
 
-        uint32_t code = hotp(sha, (uint8_t*) key, strlen(key), i, 6);
+//         uint32_t code = hotp(sha, (uint8_t*) key, strlen(key), i, 6);
 
-        printf("Counter:  %lu\n", i);
-        printf("Result:   %u\n", code);
-        printf("Correct:  %s\n\n", code == expected[i] ? "yes" : "no");
-    }
-}
-
-#include <ctime>
+//         printf("Counter:  %lu\n", i);
+//         printf("Result:   %u\n", code);
+//         printf("Correct:  %s\n\n", code == expected[i] ? "yes" : "no");
+//     }
+// }
 
 template<size_t N = 1, class Fn, class ...Args>
 clock_t measure_time(Fn &&fn, Args &&...args)
@@ -135,6 +123,13 @@ clock_t measure_time(Fn &&fn, Args &&...args)
     
 int main()
 {
+    // printf("%u %u %u \n", 0, Keccak<0>::B, Keccak<0>::R);
+    // printf("%u %u %u \n", 1, Keccak<1>::B, Keccak<1>::R);
+    // printf("%u %u %u \n", 2, Keccak<2>::B, Keccak<2>::R);
+    // printf("%u %u %u \n", 3, Keccak<3>::B, Keccak<3>::R);
+    // printf("%u %u %u \n", 4, Keccak<4>::B, Keccak<4>::R);
+    // printf("%u %u %u \n", 5, Keccak<5>::B, Keccak<5>::R);
+    // printf("%u %u %u \n", 6, Keccak<6>::B, Keccak<6>::R);
     // printf("1: %lu clock_t \n", measure_time<1000000>(md2_test_1));
     // printf("2: %lu clock_t \n", measure_time<1000000>(md2_test_2));
     // printf("1: %lu clock_t \n", measure_time<1000000>(md2_test_1));
@@ -257,22 +252,4 @@ int main()
     // // ANCHOR: HOTP-SHA-1
 
     // hotp_sha_1_test();
-
-    // const char aaa[] = "aaaaaaaaaaaaaaaaa";
-    // constexpr auto N = 10000000;
-
-    // SHA1 sha1;
-
-    // uint8_t digest[SHA1::HASH_SIZE];
-
-    // clock_t begin = clock();
-    // for (size_t i = 0; i < N; ++i) {
-    //     sha1.init();
-    //     sha1.update(aaa, sizeof(aaa));
-    //     sha1.final(digest);
-    // }
-    // clock_t end = clock();
-
-    // printf("1) digest %02x \n", digest[6]);
-    // printf("1) %d avg exec time: %lu clock_t \n", N, (end - begin));
 }

@@ -11,20 +11,22 @@ struct MD2 {
 
     static constexpr size_t SIZE = 16;
 
+    using byte = uint8_t;
+
     void init();
     bool update(const void *in, size_t len);
-    bool final(uint8_t out[SIZE]);
-    bool operator()(const void *in, size_t len, uint8_t out[SIZE]);
+    bool final(byte out[SIZE]);
+    bool operator()(const void *in, size_t len, byte out[SIZE]);
 private:
     void process();
 
-    uint8_t checksum[16];
-    uint8_t state[16];
-    uint8_t block[16];
-    uint8_t block_idx;
+    byte checksum[16];
+    byte state[16];
+    byte block[16];
+    byte block_idx;
 };
 
-bool MD2::operator()(const void *in, size_t len, uint8_t out[SIZE])
+bool MD2::operator()(const void *in, size_t len, byte out[SIZE])
 {
     init();
     return update(in, len) && final(out);
@@ -50,7 +52,7 @@ bool MD2::update(const void *in, size_t len)
     return true;
 }
 
-bool MD2::final(uint8_t out[SIZE])
+bool MD2::final(byte out[SIZE])
 {
     if (!out)
         return false;
@@ -69,7 +71,7 @@ bool MD2::final(uint8_t out[SIZE])
 
 void MD2::process()
 {
-    constexpr uint8_t table[] = { 
+    constexpr byte table[] = { 
         0x29, 0x2e, 0x43, 0xc9, 0xa2, 0xd8, 0x7c, 0x01, 0x3d, 0x36, 0x54, 0xa1, 0xec, 0xf0, 0x06, 0x13, 
         0x62, 0xa7, 0x05, 0xf3, 0xc0, 0xc7, 0x73, 0x8c, 0x98, 0x93, 0x2b, 0xd9, 0xbc, 0x4c, 0x82, 0xca, 
         0x1e, 0x9b, 0x57, 0x3c, 0xfd, 0xd4, 0xe0, 0x16, 0x67, 0x42, 0x6f, 0x18, 0x8a, 0x17, 0xe5, 0x12, 
@@ -88,7 +90,7 @@ void MD2::process()
         0x31, 0x44, 0x50, 0xb4, 0x8f, 0xed, 0x1f, 0x1a, 0xdb, 0x99, 0x8d, 0x33, 0x9f, 0x11, 0x83, 0x14,
     };
 
-    uint8_t buf[48];
+    byte buf[48];
 
     memcpy(buf,                 state, sizeof(state));
     memcpy(buf + sizeof(state), block, sizeof(block));
@@ -96,11 +98,11 @@ void MD2::process()
     for (int i = 0; i < 16; ++i)
         buf[i + 32] = state[i] ^ block[i];
 
-    int t = 0;
+    byte t = 0;
     for (int i = 0; i < 18; ++i) {
         for (int j = 0; j < 48; ++j)
             t = buf[j] ^= table[t];
-        t = (t + i) & 0xff;
+        t += i;
     }
 
     memcpy(state, buf, sizeof(state));
