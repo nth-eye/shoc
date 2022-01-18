@@ -134,3 +134,8 @@ TEST(AES128, EncryptDecryptCTR)
     ASSERT_TRUE(ctr_decrypt(test_key, iv, out, out, sizeof(out)));
     compare(out, test_in, sizeof(test_in));
 }
+
+TEST(AES128, EncryptDecryptCCM)
+{
+    
+}
