@@ -13,14 +13,27 @@ constexpr bool ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out, 
     if (len & 0xf)
         return false;
 
-    AES ctx;
-
-    ctx.init(key);
+    AES ctx{key};
     
     for (size_t i = 0; i < len; i += 16)
         ctx.encrypt(in + i, out + i);
     return true;
-} 
+}
+
+constexpr bool ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out, size_t len)
+{
+    if (!key || !in || !out || !len)
+        return false;
+
+    if (len & 0xf)
+        return false;
+
+    AES ctx{key};
+
+    for (size_t i = 0; i < len; i += 16)
+        ctx.decrypt(in + i, out + i);
+    return true;
+}
 
 }
 

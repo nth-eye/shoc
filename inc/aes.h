@@ -13,8 +13,10 @@ enum AES_Type {
     AES_256,
 };
 
-// template<Type T = AES_128>
+// template<AES_Type T = AES_128>
 struct AES {
+    constexpr AES() = default;
+    constexpr AES(const uint8_t *key) { init(key); }
     constexpr void init(const uint8_t *key);
     constexpr void encrypt(const uint8_t *in, uint8_t *out);
     constexpr void decrypt(const uint8_t *in, uint8_t *out);
