@@ -12,7 +12,7 @@ constexpr bool ctr_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t 
 
     uint8_t buf[16]     = {};
     uint8_t nonce[16]   = {};
-    uint64_t counter = 
+    uint64_t counter    = 
         (static_cast<uint64_t>(iv[12]) << 24) | 
         (static_cast<uint64_t>(iv[13]) << 16) |
         (static_cast<uint64_t>(iv[14]) << 8)  | 
@@ -21,9 +21,11 @@ constexpr bool ctr_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t 
 
     AES ctx{key};
 
-    for (size_t i = 0; i < len; ++i) {
-        size_t idx = i & 0xf;
-        if (idx == 0) {
+    auto end = out + len;
+    auto idx = 0;
+    
+    while (out < end) {
+        if ((idx &= 0xf) == 0) {
             ctx.encrypt(nonce, buf);
             ++counter;
             nonce[12] = counter >> 24;
@@ -31,7 +33,7 @@ constexpr bool ctr_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t 
             nonce[14] = counter >> 8;
             nonce[15] = counter;
         }
-        *out++ = buf[idx] ^ *in++;
+        *out++ = buf[idx++] ^ *in++;
     }
     return true;       
 }
