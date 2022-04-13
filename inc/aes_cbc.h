@@ -5,7 +5,7 @@
 
 namespace creep {
 
-constexpr bool cbc_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in, uint8_t *out, size_t len)
+inline bool cbc_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in, uint8_t *out, size_t len)
 {
     if (!key || !iv || !in || !out || !len)
         return false;
@@ -13,8 +13,8 @@ constexpr bool cbc_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t 
     if (len & 0xf)
         return false;
 
-    uint8_t *end    = out + len;
-    uint8_t buf[16] = {};
+    uint8_t *end = out + len;
+    uint8_t buf[16];
 	memcpy(buf, iv, 16);
 
     AES ctx{key};
@@ -28,7 +28,7 @@ constexpr bool cbc_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t 
     return true;
 }
 
-constexpr bool cbc_decrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in, uint8_t *out, size_t len)
+inline bool cbc_decrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in, uint8_t *out, size_t len)
 {
     if (!key || !iv || !in || !out || !len)
         return false;
@@ -36,9 +36,9 @@ constexpr bool cbc_decrypt(const uint8_t *key, const uint8_t *iv, const uint8_t 
     if (len & 0xf)
         return false;
 
-    const uint8_t *end  = in + len;
-    uint8_t xor_buf[16] = {};
-    uint8_t tmp_buf[16] = {};
+    const uint8_t *end = in + len;
+    uint8_t xor_buf[16];
+    uint8_t tmp_buf[16];
 	memcpy(xor_buf, iv, 16);
 
     AES ctx{key};

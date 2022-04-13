@@ -5,7 +5,7 @@
 
 namespace creep {
 
-constexpr bool ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out, size_t len)
+inline bool ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out, size_t len)
 {
     if (!key || !in || !out || !len)
         return false;
@@ -20,7 +20,7 @@ constexpr bool ecb_encrypt(const uint8_t *key, const uint8_t *in, uint8_t *out, 
     return true;
 }
 
-constexpr bool ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out, size_t len)
+inline bool ecb_decrypt(const uint8_t *key, const uint8_t *in, uint8_t *out, size_t len)
 {
     if (!key || !in || !out || !len)
         return false;

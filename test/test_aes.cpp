@@ -26,7 +26,7 @@ static void compare(uint8_t *out, const uint8_t *exp, size_t len)
     ASSERT_TRUE(exp);
 
     for (size_t i = 0; i < len; ++i) {
-        EXPECT_EQ(out[i], exp[i]) << "At index " << i;
+        ASSERT_EQ(out[i], exp[i]) << "At index " << i;
     }
 }
 
@@ -131,19 +131,26 @@ TEST(AES128, EncryptDecryptCTR)
     uint8_t out[64] = {};
 
     ASSERT_TRUE(ctr_encrypt(test_key, iv, test_in, out, sizeof(test_in)));
-    compare(out, exp, sizeof(out));
+    compare(out, exp, sizeof(exp));
     ASSERT_TRUE(ctr_decrypt(test_key, iv, out, out, sizeof(out)));
     compare(out, test_in, sizeof(test_in));
 }
 
 TEST(AES128, EncryptDecryptCCM)
 {
+    uint8_t out[512];
+    uint8_t tag[512];
+
     const uint8_t key[]     = { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF };
     const uint8_t nonce[]   = { 0x00, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5 };
     const uint8_t aad[]     = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
     const uint8_t in[]      = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E };
-    uint8_t out[512];
-    uint8_t tag[512];
+    const uint8_t exp_out[] = { 0x58, 0x8C, 0x97, 0x9A, 0x61, 0xC6, 0x63, 0xD2, 0xF0, 0x66, 0xD0, 0xC2, 0xC0, 0xF9, 0x89, 0x80, 0x6D, 0x5F, 0x6B, 0x61, 0xDA, 0xC3, 0x84 };
+    const uint8_t exp_tag[] = { 0x17, 0xE8, 0xD1, 0x2C, 0xFD, 0xF9, 0x26, 0xE0 };
 
-    ccm_encrypt(key, nonce, sizeof(nonce), aad, sizeof(aad), in, out, sizeof(in), tag, 8);
+    ASSERT_TRUE(ccm_encrypt<2>(key, nonce, aad, sizeof(aad), tag, 8, in, sizeof(in), out));
+    compare(out, exp_out, sizeof(exp_out));
+    compare(tag, exp_tag, sizeof(exp_tag));
+    EXPECT_TRUE(ccm_decrypt<2>(key, nonce, aad, sizeof(aad), tag, 8, out, sizeof(in), out));
+    compare(out, in, sizeof(in));
 }

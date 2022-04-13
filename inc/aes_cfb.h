@@ -5,7 +5,7 @@
 
 namespace creep {
 
-constexpr bool cfb_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in, uint8_t *out, size_t len)
+inline bool cfb_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in, uint8_t *out, size_t len)
 {
     if (!key || !iv || !in || !out || !len)
         return false;
@@ -24,13 +24,13 @@ constexpr bool cfb_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t 
     return true;
 }
 
-constexpr bool cfb_decrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in, uint8_t *out, size_t len)
+inline bool cfb_decrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in, uint8_t *out, size_t len)
 {
     if (!key || !iv || !in || !out || !len)
         return false;
 
     uint8_t tmp = 0;
-    uint8_t buf[16] = {};
+    uint8_t buf[16];
     memcpy(buf, iv, 16);
 
     AES ctx{key};

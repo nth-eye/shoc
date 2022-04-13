@@ -1,9 +1,11 @@
 #ifndef AES_CCM
 #define AES_CCM
 
-#include "aes.h"
+#include "aes_cbc_mac.h"
+#include "aes_ctr.h"
 #include <cstdio>
 #include <cctype>
+#include <span>
 
 namespace creep {
 
@@ -66,107 +68,59 @@ inline void util_log_hex(const void *data, size_t len, const char *str)
     }
 }
 
-inline size_t cbc_mac(AES &ctx, uint8_t *buf, const uint8_t *aad, size_t aad_len, size_t pos)
+template<size_t L>
+inline void ccm_ctr(AES &ctx, uint8_t *a_0, const uint8_t *nonce, const uint8_t *in, uint8_t *out, size_t len)
 {
-    auto end = aad + aad_len;
+    static_assert(L > 1 && L < 9, "invalid length field size");
 
-    while (aad != end) {
-        buf[pos] ^= *aad++;
-        if (pos == 15) {
-            util_log_hex(buf, 16, "After xor");
-            ctx.encrypt(buf, buf);
-            util_log_hex(buf, 16, "After AES");
-        }
-        pos = (pos + 1) & 0xf;
-    }
-    return pos;
-}
+    constexpr size_t N_LEN = 15 - L;    // Nonce length
+    constexpr size_t L_IDX = N_LEN + 1; // Start of length field 
 
-inline void cbc_mac_padded(AES &ctx, uint8_t *buf, const uint8_t *aad, size_t aad_len, size_t start)
-{
-    if (size_t i = cbc_mac(ctx, buf, aad, aad_len, start)) {
-        for (; i < 16; ++i)
-            buf[i] ^= 0;
-        util_log_hex(buf, 16, "After xor");
-        ctx.encrypt(buf, buf);
-        util_log_hex(buf, 16, "After AES");
-    }
-}
+    a_0[0] = L - 1;
+    memcpy(&a_0[1], nonce, N_LEN);
+    memset(&a_0[L_IDX], 0, L);
 
-inline void ccm_ctr(AES &ctx, uint8_t *a_0, const uint8_t *in, uint8_t *out, size_t len)
-{
-    uint8_t buf[16]     = {};
-    uint8_t a_i[16]     = {};
-    uint16_t counter    = 
-        (static_cast<uint64_t>(a_0[14]) << 8)  | 
-        (static_cast<uint64_t>(a_0[15]));
+    uint8_t buf[16];
+    uint8_t a_i[16];
     memcpy(a_i, a_0, 16);
 
     auto end = out + len;
     auto idx = 0;
-
-    util_log_hex(a_i, sizeof(a_i), "CTR Start");
     
     while (out < end) {
         if ((idx &= 0xf) == 0) {
-            ++counter;
-            a_i[14] = counter >> 8;
-            a_i[15] = counter;
+            ctr_inc_counter<L>(a_i);
             ctx.encrypt(a_i, buf);
-            util_log_hex(buf, sizeof(buf), "CTR");
         }
         *out++ = buf[idx++] ^ *in++;
     }
+
+    memset(&a_0[L_IDX], 0, L);
+    ctx.encrypt(a_0, a_0);
 }
 
-inline bool ccm_encrypt(
-    const uint8_t *key, 
-    const uint8_t *nonce, size_t nonce_len,
-    const uint8_t *aad, size_t aad_len,
-    const uint8_t *in, 
-    uint8_t *out, size_t len,
-    uint8_t *tag, size_t tag_len)
+template<size_t L>
+inline void ccm_auth(AES &ctx, uint8_t *block, const uint8_t *nonce, const uint8_t *in, size_t len, const uint8_t *aad, size_t aad_len, size_t tag_len)
 {
-    if (!key || !nonce || !in || !out || !tag || !len)
-        return false;
+    static_assert(L > 1 && L < 9, "invalid length field size");
 
-    if (aad && !aad_len)
-        return false;
+    constexpr size_t N_LEN = 15 - L;    // Nonce length
+    constexpr size_t L_IDX = N_LEN + 1; // Start of length field 
 
-    if (nonce_len > 13 || nonce_len < 7)
-        return false;
+    block[0] =  (aad_len ? 0x40 : 0x00)     | 
+                (((tag_len - 2) / 2) << 3)  |
+                (L - 1);
 
-    if (tag_len > 16 || tag_len < 4 || tag_len & 1)
-        return false;
-
-    size_t l = 15 - nonce_len;
-    size_t m = tag_len;
-    uint8_t block[16] = {};
-
-    printf("L:  %u \n", l);
-    printf("M:  %u \n", m);
-
-    // ANCHOR: Authentication
-
-    block[0] =  (aad_len ? 0x40 : 0)    | 
-                (((m - 2) / 2) << 3)    |
-                (l - 1);
-
-    memcpy(&block[1], nonce, nonce_len);
+    memcpy(&block[1], nonce, N_LEN);
 
     for (size_t 
-            i = nonce_len + 1, 
-            j = l - 1; 
+            i = L_IDX, 
+            j = L - 1; 
         i < 16; ++i) 
     {
         block[i] = len >> (8 * j--);
     }
-
-    AES ctx{key};
-
-    util_log_hex(block, sizeof(block), "CBC IV in");
     ctx.encrypt(block, block);
-    util_log_hex(block, sizeof(block), "CBC IV out");
 
     if (aad_len) {
         size_t start;
@@ -200,27 +154,86 @@ inline bool ccm_encrypt(
 
     if (len) 
         cbc_mac_padded(ctx, block, in, len, 0);
+}
+
+template<size_t L = 2>
+inline bool ccm_encrypt(
+    const uint8_t *key, 
+    const uint8_t *nonce,
+    const uint8_t *aad, size_t aad_len,
+          uint8_t *tag, size_t tag_len,
+    const uint8_t *in, size_t len,
+    uint8_t *out)
+{
+    if (!key || !nonce || !in || !out || !len)
+        return false;
+
+    if (aad && !aad_len)
+        return false;
+
+    if (tag_len > 16 || 
+        tag_len < 4  || 
+        tag_len & 1)
+        return false;
+
+    AES ctx{key};
+    uint8_t block[16];
+
+    // ANCHOR: Authentication
+
+    ccm_auth<L>(ctx, block, nonce, in, len, aad, aad_len, tag_len);
 
     memcpy(tag, block, tag_len);
 
-    util_log_hex(tag, tag_len, "CBC-MAC");
-
     // ANCHOR: Encryption
 
-    block[0] = l - 1;
-    memcpy(&block[1], nonce, nonce_len);
-    memset(&block[1 + nonce_len], 0, l);
-    ccm_ctr(ctx, block, in, out, len);
-    memset(&block[1 + nonce_len], 0, l);
+    ccm_ctr<L>(ctx, block, nonce, in, out, len);
 
-    ctx.encrypt(block, block);
-
-    for (size_t i = 0; i < m; ++i)
+    for (size_t i = 0; i < tag_len; ++i)
         tag[i] ^= block[i];
-    
-    util_log_hex(tag, m, "CTR MAC");
-    util_log_hex(out, len, "OUT");
 
+    return true;
+}
+
+template<size_t L = 2>
+inline bool ccm_decrypt(
+    const uint8_t *key, 
+    const uint8_t *nonce,
+    const uint8_t *aad, size_t aad_len,
+    const uint8_t *tag, size_t tag_len,
+    const uint8_t *in, size_t len,
+    uint8_t *out)
+{
+    if (!key || !nonce || !in || !out || !len)
+        return false;
+
+    if (aad && !aad_len)
+        return false;
+
+    if (tag_len > 16 || 
+        tag_len < 4  || 
+        tag_len & 1)
+        return false;
+
+    AES ctx{key};
+    uint8_t block[16];
+    uint8_t mac[16];
+
+    // ANCHOR: Decryption
+
+    ccm_ctr<L>(ctx, block, nonce, in, out, len);
+
+    for (size_t i = 0; i < tag_len; ++i)
+        mac[i] = block[i] ^ tag[i];
+
+    // ANCHOR: Authentication
+
+    ccm_auth<L>(ctx, block, nonce, in, len, aad, aad_len, tag_len);
+
+    if (memcmp(mac, block, tag_len)) {
+        memset(out, 0, len);
+        return false;
+    }
     return true;
 }
 

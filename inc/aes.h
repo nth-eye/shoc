@@ -15,21 +15,21 @@ enum AES_Type {
 
 // template<AES_Type T = AES_128>
 struct AES {
-    constexpr AES() = default;
-    constexpr AES(const uint8_t *key) { init(key); }
-    constexpr void init(const uint8_t *key);
-    constexpr void encrypt(const uint8_t *in, uint8_t *out);
-    constexpr void decrypt(const uint8_t *in, uint8_t *out);
+    AES() = default;
+    AES(const uint8_t *key) { init(key); }
+    void init(const uint8_t *key);
+    void encrypt(const uint8_t *in, uint8_t *out);
+    void decrypt(const uint8_t *in, uint8_t *out);
 private:
-    constexpr void add_round_key(const uint32_t *key);
+    void add_round_key(const uint32_t *key);
 
-    constexpr void sub_bytes();
-    constexpr void shift_rows();
-    constexpr void mix_columns();
+    void sub_bytes();
+    void shift_rows();
+    void mix_columns();
 
-    constexpr void inv_sub_bytes();
-    constexpr void inv_shift_rows();
-    constexpr void inv_mix_columns();
+    void inv_sub_bytes();
+    void inv_shift_rows();
+    void inv_mix_columns();
 
     static constexpr auto T = AES_128;
     static constexpr auto NK = 4 + 2 * T;
@@ -108,7 +108,7 @@ protected:
 
 // SECTION: Implementation
 
-constexpr void AES::init(const uint8_t *key)
+inline void AES::init(const uint8_t *key)
 {
     const uint32_t rconst[11] = {
         0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
@@ -134,7 +134,7 @@ constexpr void AES::init(const uint8_t *key)
     }
 }
 
-constexpr void AES::encrypt(const uint8_t *in, uint8_t *out)
+inline void AES::encrypt(const uint8_t *in, uint8_t *out)
 {
     memcpy(state, in, sizeof(state));
 
@@ -153,7 +153,7 @@ constexpr void AES::encrypt(const uint8_t *in, uint8_t *out)
     memset(state, 0, sizeof(state));
 }
 
-constexpr void AES::decrypt(const uint8_t *in, uint8_t *out)
+inline void AES::decrypt(const uint8_t *in, uint8_t *out)
 {
     memcpy(state, in, sizeof(state));
 
@@ -172,7 +172,7 @@ constexpr void AES::decrypt(const uint8_t *in, uint8_t *out)
     memset(state, 0, sizeof(state));
 }
 
-constexpr void AES::add_round_key(const uint32_t *key)
+inline void AES::add_round_key(const uint32_t *key)
 {
     state[0]    ^= key[0] >> 24; 
     state[1]    ^= key[0] >> 16;
@@ -192,13 +192,13 @@ constexpr void AES::add_round_key(const uint32_t *key)
     state[15]   ^= key[3];
 }
 
-constexpr void AES::sub_bytes()
+inline void AES::sub_bytes()
 {
     for (auto &s : state)
         s = sbox[s];
 }
 
-constexpr void AES::shift_rows()
+inline void AES::shift_rows()
 {   
     uint8_t tmp[NB * NK] = {
         state[0], state[5], state[10], state[15], 
@@ -209,7 +209,7 @@ constexpr void AES::shift_rows()
     memcpy(state, tmp, sizeof(state));
 }
 
-constexpr void AES::mix_columns()
+inline void AES::mix_columns()
 {
     uint8_t tmp[NB * NK] = {};
 
@@ -221,13 +221,13 @@ constexpr void AES::mix_columns()
     memcpy(state, tmp, sizeof(state));
 }
 
-constexpr void AES::inv_sub_bytes()
+inline void AES::inv_sub_bytes()
 {
     for (auto &s : state)
         s = rsbox[s];
 }
 
-constexpr void AES::inv_shift_rows()
+inline void AES::inv_shift_rows()
 {   
     uint8_t tmp[NB * NK] = {
         state[0], state[13], state[10], state[7], 
@@ -238,7 +238,7 @@ constexpr void AES::inv_shift_rows()
     memcpy(state, tmp, sizeof(state));
 }
 
-constexpr void AES::inv_mix_columns()
+inline void AES::inv_mix_columns()
 {
     uint8_t tmp[NB * NK] = {};
 
