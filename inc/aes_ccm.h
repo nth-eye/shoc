@@ -9,75 +9,16 @@
 
 namespace creep {
 
-inline void util_log_hex(const void *data, size_t len, const char *str)
-{
-    printf("[%08llx] \"%s\" - %lu bytes \n", (long long unsigned) data, str, len);
-
-    if (!data || !len)
-        return;
-
-    const uint8_t *p = static_cast<const uint8_t*>(data);
-
-    for (size_t i = 0; i < len; ++i) {
-
-        if (!(i & 15))
-            printf("[%08llx]  ", (long long unsigned) p + i);
-
-        printf("%02x ", p[i]);
-        
-        if ((i & 7) == 7)
-            putchar(' ');
-
-        if ((i & 15) == 15) {
-            
-            printf("|");
-
-            for (int j = 15; j >= 0; --j) {
-
-                char c = p[i - j];
-
-                if (isprint(c))
-                    printf("%c", c);
-                else
-                    printf(".");
-            }
-            printf("|\n");
-        }
-    }
-
-    int rem = len - ((len >> 4) << 4);
-
-    if (rem) {
-
-        printf("%*c |", (16 - rem) * 3 + ((~rem & 8) >> 3), ' ');
-
-        for (int j = rem; j; --j) {
-
-            char c = p[len - j];
-
-            if (isprint(c))
-                printf("%c", c);
-            else
-                printf(".");
-        }
-
-        for (int j = 0; j < 16 - rem; ++j)
-            putchar('.');
-
-        printf("|\n");
-    }
-}
-
 template<size_t L>
 inline void ccm_ctr(AES &ctx, uint8_t *a_0, const uint8_t *nonce, const uint8_t *in, uint8_t *out, size_t len)
 {
     static_assert(L > 1 && L < 9, "invalid length field size");
 
-    constexpr size_t N_LEN = 15 - L;    // Nonce length
-    constexpr size_t L_IDX = N_LEN + 1; // Start of length field 
+    constexpr size_t N = 15 - L;    // Nonce length
+    constexpr size_t L_IDX = N + 1; // Start of length field 
 
     a_0[0] = L - 1;
-    memcpy(&a_0[1], nonce, N_LEN);
+    memcpy(&a_0[1], nonce, N);
     memset(&a_0[L_IDX], 0, L);
 
     uint8_t buf[16];
@@ -104,17 +45,16 @@ inline void ccm_auth(AES &ctx, uint8_t *block, const uint8_t *nonce, const uint8
 {
     static_assert(L > 1 && L < 9, "invalid length field size");
 
-    constexpr size_t N_LEN = 15 - L;    // Nonce length
-    constexpr size_t L_IDX = N_LEN + 1; // Start of length field 
+    constexpr size_t N = 15 - L; // Nonce length
 
     block[0] =  (aad_len ? 0x40 : 0x00)     | 
                 (((tag_len - 2) / 2) << 3)  |
                 (L - 1);
 
-    memcpy(&block[1], nonce, N_LEN);
+    memcpy(&block[1], nonce, N);
 
     for (size_t 
-            i = L_IDX, 
+            i = N + 1, // Start of length field
             j = L - 1; 
         i < 16; ++i) 
     {
@@ -176,16 +116,12 @@ inline bool ccm_encrypt(
         tag_len & 1)
         return false;
 
-    AES ctx{key};
+    AES ctx {key};
     uint8_t block[16];
-
-    // ANCHOR: Authentication
 
     ccm_auth<L>(ctx, block, nonce, in, len, aad, aad_len, tag_len);
 
     memcpy(tag, block, tag_len);
-
-    // ANCHOR: Encryption
 
     ccm_ctr<L>(ctx, block, nonce, in, out, len);
 
@@ -215,18 +151,14 @@ inline bool ccm_decrypt(
         tag_len & 1)
         return false;
 
-    AES ctx{key};
+    AES ctx {key};
     uint8_t block[16];
     uint8_t mac[16];
-
-    // ANCHOR: Decryption
 
     ccm_ctr<L>(ctx, block, nonce, in, out, len);
 
     for (size_t i = 0; i < tag_len; ++i)
         mac[i] = block[i] ^ tag[i];
-
-    // ANCHOR: Authentication
 
     ccm_auth<L>(ctx, block, nonce, in, len, aad, aad_len, tag_len);
 
