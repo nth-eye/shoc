@@ -9,7 +9,7 @@ template<size_t L>
 inline void ctr_inc_counter(uint8_t *block)
 {
     size_t i = 15;
-    while (i > 15 - L && ++block[i--] == 0);
+    while (++block[i--] == 0 && i > 15 - L);
 }
 
 template<size_t L = 4>

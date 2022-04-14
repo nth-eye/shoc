@@ -38,7 +38,7 @@ private:
     byte block_idx;
 };
 
-void MD4::init()
+inline void MD4::init()
 {
     state[0] = 0x67452301;
     state[1] = 0xefcdab89;
@@ -48,7 +48,7 @@ void MD4::init()
     block_idx = length_high = length_low = 0;
 }
 
-bool MD4::update(const void *in, size_t len)
+inline bool MD4::update(const void *in, size_t len)
 {
     if (!in)
         return false;
@@ -68,7 +68,7 @@ bool MD4::update(const void *in, size_t len)
     return true;
 }
 
-bool MD4::final(byte out[SIZE])
+inline bool MD4::final(byte out[SIZE])
 {
     if (!out)
         return false;
@@ -86,13 +86,13 @@ bool MD4::final(byte out[SIZE])
     return true;
 }
 
-bool MD4::operator()(const void *in, size_t len, byte out[SIZE])
+inline bool MD4::operator()(const void *in, size_t len, byte out[SIZE])
 {
     init();
     return update(in, len) && final(out);
 }
 
-void MD4::pad()
+inline void MD4::pad()
 {
     block[block_idx++] = 0x80;
 
@@ -109,7 +109,7 @@ void MD4::pad()
     process();
 }
 
-void MD4::process()
+inline void MD4::process()
 {
     word a = state[0];
     word b = state[1];

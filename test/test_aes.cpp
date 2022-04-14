@@ -30,7 +30,7 @@ static void compare(uint8_t *out, const uint8_t *exp, size_t len)
     }
 }
 
-TEST(AES128, EncryptDecrypt)
+TEST(Aes128, EncryptDecrypt)
 {
     uint8_t out[16] = {};
     const uint8_t in[16] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff };
@@ -44,7 +44,7 @@ TEST(AES128, EncryptDecrypt)
     compare(out, in, 16);
 }
 
-TEST(AES128, EncryptDecryptECB)
+TEST(Aes128, EncryptDecryptECB)
 {
     const uint8_t exp[64] = {
         0x3a, 0xd7, 0x7b, 0xb4, 0x0d, 0x7a, 0x36, 0x60, 0xa8, 0x9e, 0xca, 0xf3, 0x24, 0x66, 0xef, 0x97,
@@ -60,7 +60,7 @@ TEST(AES128, EncryptDecryptECB)
     compare(out, test_in, sizeof(test_in));
 }
 
-TEST(AES128, EncryptDecryptCBC)
+TEST(Aes128, EncryptDecryptCBC)
 {
     const uint8_t iv[16] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
@@ -79,7 +79,7 @@ TEST(AES128, EncryptDecryptCBC)
     compare(out, test_in, sizeof(test_in));
 }
 
-TEST(AES128, EncryptDecryptCFB)
+TEST(Aes128, EncryptDecryptCFB)
 {
     const uint8_t iv[16] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
@@ -98,7 +98,7 @@ TEST(AES128, EncryptDecryptCFB)
     compare(out, test_in, sizeof(test_in));
 }
 
-TEST(AES128, EncryptDecryptOFB)
+TEST(Aes128, EncryptDecryptOFB)
 {
     const uint8_t iv[16] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
@@ -117,7 +117,7 @@ TEST(AES128, EncryptDecryptOFB)
     compare(out, test_in, sizeof(test_in));
 }
 
-TEST(AES128, EncryptDecryptCTR)
+TEST(Aes128, EncryptDecryptCTR)
 {
     const uint8_t iv[16] = {
         0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff,
@@ -136,7 +136,7 @@ TEST(AES128, EncryptDecryptCTR)
     compare(out, test_in, sizeof(test_in));
 }
 
-TEST(AES128, EncryptDecryptCCM)
+TEST(Aes128, EncryptDecryptCCM)
 {
     uint8_t out[512];
     uint8_t tag[512];

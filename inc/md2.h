@@ -26,18 +26,18 @@ private:
     byte block_idx;
 };
 
-bool MD2::operator()(const void *in, size_t len, byte out[SIZE])
+inline bool MD2::operator()(const void *in, size_t len, byte out[SIZE])
 {
     init();
     return update(in, len) && final(out);
 }
 
-void MD2::init()
+inline void MD2::init()
 {
     memset(this, 0, sizeof(*this));
 }
 
-bool MD2::update(const void *in, size_t len)
+inline bool MD2::update(const void *in, size_t len)
 {
     if (!in)
         return false;
@@ -52,7 +52,7 @@ bool MD2::update(const void *in, size_t len)
     return true;
 }
 
-bool MD2::final(byte out[SIZE])
+inline bool MD2::final(byte out[SIZE])
 {
     if (!out)
         return false;
@@ -69,7 +69,7 @@ bool MD2::final(byte out[SIZE])
     return true;
 }
 
-void MD2::process()
+inline void MD2::process()
 {
     constexpr byte table[] = { 
         0x29, 0x2e, 0x43, 0xc9, 0xa2, 0xd8, 0x7c, 0x01, 0x3d, 0x36, 0x54, 0xa1, 0xec, 0xf0, 0x06, 0x13, 
