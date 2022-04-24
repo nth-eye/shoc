@@ -11,7 +11,7 @@ uint32_t hotp(const void *key, size_t key_len, uint64_t count, int mod)
 {
     static_assert(H::SIZE >= 20, "HOTP hash algorithm must provide at least 20 byte long value");
 
-    uint8_t digest[H::SIZE];
+    byte digest[H::SIZE];
 
     if constexpr (little_endian()) {
         count = (count & 0x00000000ffffffff) << 32 | (count & 0xffffffff00000000) >> 32;

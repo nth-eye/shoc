@@ -6,12 +6,12 @@
 namespace shoc {
 
 template<class H>
-void hmac(const void *msg, size_t msg_len, const void *key, size_t key_len, uint8_t *digest)
+void hmac(const void *msg, size_t msg_len, const void *key, size_t key_len, byte *digest)
 {
     H hash;
-    uint8_t k_ipad[H::BLOCK_SIZE] = {};
-    uint8_t k_opad[H::BLOCK_SIZE] = {};
-    uint8_t tk[H::SIZE] = {};
+    byte k_ipad[H::BLOCK_SIZE] = {};
+    byte k_opad[H::BLOCK_SIZE] = {};
+    byte tk[H::SIZE] = {};
 
     if (key_len > H::BLOCK_SIZE) {
 
@@ -46,12 +46,12 @@ template<class H>
 struct Hmac {
     void init(const void *key, size_t key_len);
     void update(const void *msg, size_t msg_len);
-    void final(uint8_t *out);
-    void operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, uint8_t *out);
+    void final(byte *out);
+    void operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, byte *out);
 private:
     H hash;
-    uint8_t k_pad[H::BLOCK_SIZE];
-    uint8_t tk[H::SIZE];
+    byte k_pad[H::BLOCK_SIZE];
+    byte tk[H::SIZE];
 };
 
 template<class H>
@@ -88,7 +88,7 @@ void Hmac<H>::update(const void *msg, size_t msg_len)
 }
 
 template<class H>
-void Hmac<H>::final(uint8_t *out)
+void Hmac<H>::final(byte *out)
 {
     hash.final(out);
     hash.init();
@@ -98,7 +98,7 @@ void Hmac<H>::final(uint8_t *out)
 }
 
 template<class H>
-void Hmac<H>::operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, uint8_t *out)
+void Hmac<H>::operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, byte *out)
 {
     init(key, key_len), update(msg, msg_len), final(out);
 }

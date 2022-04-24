@@ -22,7 +22,7 @@ private:
         word state32[3][4];
         byte state8[48];
     };
-    size_t idx;
+    byte idx;
 };
 
 inline void Gimli::init()

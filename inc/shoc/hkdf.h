@@ -7,14 +7,14 @@ namespace shoc {
 
 template<class H>
 bool hkdf(
-    uint8_t *okm, size_t okm_len, 
+    byte *okm, size_t okm_len, 
     const void *ikm, size_t ikm_len, 
     const void *salt, size_t salt_len,
     const void *info, size_t info_len)
 {
-    const uint8_t default_salt[H::SIZE] = {};
-    uint8_t prk[H::SIZE];
-    uint8_t t[H::SIZE];
+    const byte default_salt[H::SIZE] = {};
+    byte prk[H::SIZE];
+    byte t[H::SIZE];
     Hmac<H> hmac;
 
     if (!salt || !salt_len) {
@@ -30,7 +30,7 @@ bool hkdf(
     if (iterations > 255)
         return false;
 
-    for (uint8_t i = 1; i <= iterations; ++i, offset += H::SIZE) {
+    for (byte i = 1; i <= iterations; ++i, offset += H::SIZE) {
         
         hmac.init(prk, sizeof(prk));
         if (i > 1)

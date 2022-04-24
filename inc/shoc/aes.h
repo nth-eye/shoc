@@ -79,7 +79,7 @@ protected:
     static constexpr auto subbyte(word x, int o)    { return sbox[(x >> o) & 0xff] << o; }
     static constexpr auto subword(word x)           { return subbyte(x, 24) | subbyte(x, 16) | subbyte(x, 8) | subbyte(x, 0); }
     static constexpr auto rotword(word x)           { return (x >> 24) | (x << 8); }
-    static constexpr auto gf_x(byte x)               { return (x << 1) ^ ((x >> 7) * 0x1b); }
+    static constexpr auto gf_x(byte x)              { return (x << 1) ^ ((x >> 7) * 0x1b); }
     static constexpr auto gf_mul(byte x, byte y) 
     {
         byte r = 0; 
