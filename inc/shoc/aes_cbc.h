@@ -1,9 +1,9 @@
-#ifndef AES_CBC_H
-#define AES_CBC_H
+#ifndef SHOC_AES_CBC_H
+#define SHOC_AES_CBC_H
 
-#include "aes.h"
+#include "shoc/aes.h"
 
-namespace creep {
+namespace shoc {
 
 inline bool cbc_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in, uint8_t *out, size_t len)
 {
@@ -17,7 +17,7 @@ inline bool cbc_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in
     uint8_t buf[16];
 	memcpy(buf, iv, 16);
 
-    AES ctx{key};
+    Aes ctx{key};
 
     for (; out < end; out += 16) {
         for (size_t j = 0; j < 16; ++j) 
@@ -41,7 +41,7 @@ inline bool cbc_decrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in
     uint8_t tmp_buf[16];
 	memcpy(xor_buf, iv, 16);
 
-    AES ctx{key};
+    Aes ctx{key};
 
     for (; in < end; in += 16) {
         memcpy(tmp_buf, in, 16);

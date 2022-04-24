@@ -1,22 +1,20 @@
-#ifndef MD2_H
-#define MD2_H
+#ifndef SHOC_MD2_H
+#define SHOC_MD2_H
 
-#include <cstdint>
-#include <cstddef>
+#include "shoc/util.h"
 #include <cstring>
+#include <cassert>
 
-namespace creep {
+namespace shoc {
 
-struct MD2 {
+struct Md2 {
 
     static constexpr size_t SIZE = 16;
 
-    using byte = uint8_t;
-
     void init();
-    bool update(const void *in, size_t len);
-    bool final(byte out[SIZE]);
-    bool operator()(const void *in, size_t len, byte out[SIZE]);
+    void update(const void *in, size_t len);
+    void final(byte out[SIZE]);
+    void operator()(const void *in, size_t len, byte out[SIZE]);
 private:
     void process();
 
@@ -26,36 +24,32 @@ private:
     byte block_idx;
 };
 
-inline bool MD2::operator()(const void *in, size_t len, byte out[SIZE])
+inline void Md2::operator()(const void *in, size_t len, byte out[SIZE])
 {
-    init();
-    return update(in, len) && final(out);
+    init(), update(in, len), final(out);
 }
 
-inline void MD2::init()
+inline void Md2::init()
 {
     memset(this, 0, sizeof(*this));
 }
 
-inline bool MD2::update(const void *in, size_t len)
+inline void Md2::update(const void *in, size_t len)
 {
-    if (!in)
-        return false;
+    assert(in);
 
-    auto p = static_cast<const uint8_t*>(in);
+    auto p = static_cast<const byte*>(in);
 
     while (len--) {
         block[block_idx++] = *p++;
         if (block_idx == sizeof(block))
             process();
     }
-    return true;
 }
 
-inline bool MD2::final(byte out[SIZE])
+inline void Md2::final(byte out[SIZE])
 {
-    if (!out)
-        return false;
+    assert(out);
 
     auto padding = sizeof(block) - block_idx;
     memset(block + block_idx, padding, padding);
@@ -65,11 +59,9 @@ inline bool MD2::final(byte out[SIZE])
 
     memcpy(out, state, sizeof(state));
     memset(this, 0, sizeof(*this));
-
-    return true;
 }
 
-inline void MD2::process()
+inline void Md2::process()
 {
     constexpr byte table[] = { 
         0x29, 0x2e, 0x43, 0xc9, 0xa2, 0xd8, 0x7c, 0x01, 0x3d, 0x36, 0x54, 0xa1, 0xec, 0xf0, 0x06, 0x13, 

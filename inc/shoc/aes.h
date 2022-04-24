@@ -1,27 +1,30 @@
-#ifndef AES_H
-#define AES_H
+#ifndef SHOC_AES_H
+#define SHOC_AES_H
 
-#include <cstdint>
-#include <cstddef>
+#include "shoc/util.h"
 #include <cstring>
+#include <cassert>
 
-namespace creep {
+namespace shoc {
 
-enum AES_Type {
+enum AesType {
     AES_128,
     AES_192,
     AES_256,
 };
 
-// template<AES_Type T = AES_128>
-struct AES {
-    AES() = default;
-    AES(const uint8_t *key) { init(key); }
-    void init(const uint8_t *key);
-    void encrypt(const uint8_t *in, uint8_t *out);
-    void decrypt(const uint8_t *in, uint8_t *out);
+// template<AesType T = AES_128>
+struct Aes {
+
+    using word = uint32_t;
+
+    Aes() = default;
+    Aes(const byte *key) { init(key); }
+    void init(const byte *key);
+    void encrypt(const byte *in, byte *out);
+    void decrypt(const byte *in, byte *out);
 private:
-    void add_round_key(const uint32_t *key);
+    void add_round_key(const word *key);
 
     void sub_bytes();
     void shift_rows();
@@ -36,10 +39,10 @@ private:
     static constexpr auto NB = 4;
     static constexpr auto NR = 10 + 2 * T;
 
-    uint8_t state[NB * NK] = {};
-    uint32_t words[NB * (NR + 1)] = {};
+    byte state[NB * NK] = {};
+    word words[NB * (NR + 1)] = {};
 protected:
-    static constexpr uint8_t sbox[256] = {
+    static constexpr byte sbox[256] = {
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
         0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
         0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
@@ -57,7 +60,7 @@ protected:
         0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
         0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16, 
     };
-    static constexpr uint8_t rsbox[256] = {
+    static constexpr byte rsbox[256] = {
         0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
         0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
         0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
@@ -75,13 +78,13 @@ protected:
         0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
         0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d,
     };
-    static constexpr auto subbyte(uint32_t x, int o)    { return sbox[(x >> o) & 0xff] << o; }
-    static constexpr auto subword(uint32_t x)           { return subbyte(x, 24) | subbyte(x, 16) | subbyte(x, 8) | subbyte(x, 0); }
-    static constexpr auto rotword(uint32_t x)           { return (x >> 24) | (x << 8); }
-    static constexpr auto gf_x(uint8_t x)               { return (x << 1) ^ ((x >> 7) * 0x1b); }
-    static constexpr auto gf_mul(uint8_t x, uint8_t y) 
+    static constexpr auto subbyte(word x, int o)    { return sbox[(x >> o) & 0xff] << o; }
+    static constexpr auto subword(word x)           { return subbyte(x, 24) | subbyte(x, 16) | subbyte(x, 8) | subbyte(x, 0); }
+    static constexpr auto rotword(word x)           { return (x >> 24) | (x << 8); }
+    static constexpr auto gf_x(byte x)               { return (x << 1) ^ ((x >> 7) * 0x1b); }
+    static constexpr auto gf_mul(byte x, byte y) 
     {
-        uint8_t r = 0; 
+        byte r = 0; 
         while (y) {
             if (y & 1)
                 r ^= x; 
@@ -90,14 +93,14 @@ protected:
         }
         return r;
     }
-    static constexpr void mult_row_col(const uint8_t *in, uint8_t *out)
+    static constexpr void mult_row_col(const byte *in, byte *out)
     {
         out[0] = gf_x(in[0])        ^ gf_mul(in[1], 3)  ^ in[2]             ^ in[3];
         out[1] = in[0]              ^ gf_x(in[1])       ^ gf_mul(in[2], 3)  ^ in[3];
         out[2] = in[0]              ^ in[1]             ^ gf_x(in[2])       ^ gf_mul(in[3], 3);
         out[3] = gf_mul(in[0], 3)   ^ in[1]             ^ in[2]             ^ gf_x(in[3]);
     }
-    static constexpr auto inv_mult_row_col(const uint8_t *in, uint8_t *out)
+    static constexpr auto inv_mult_row_col(const byte *in, byte *out)
     {
         out[0] = gf_mul(in[0], 0xe) ^ gf_mul(in[1], 0xb) ^ gf_mul(in[2], 0xd) ^ gf_mul(in[3], 0x9);
         out[1] = gf_mul(in[0], 0x9) ^ gf_mul(in[1], 0xe) ^ gf_mul(in[2], 0xb) ^ gf_mul(in[3], 0xd);
@@ -106,11 +109,9 @@ protected:
     }
 };
 
-// SECTION: Implementation
-
-inline void AES::init(const uint8_t *key)
+inline void Aes::init(const byte *key)
 {
-    const uint32_t rconst[11] = {
+    const word rconst[11] = {
         0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
         0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000
     };
@@ -134,7 +135,7 @@ inline void AES::init(const uint8_t *key)
     }
 }
 
-inline void AES::encrypt(const uint8_t *in, uint8_t *out)
+inline void Aes::encrypt(const byte *in, byte *out)
 {
     memcpy(state, in, sizeof(state));
 
@@ -153,7 +154,7 @@ inline void AES::encrypt(const uint8_t *in, uint8_t *out)
     memset(state, 0, sizeof(state));
 }
 
-inline void AES::decrypt(const uint8_t *in, uint8_t *out)
+inline void Aes::decrypt(const byte *in, byte *out)
 {
     memcpy(state, in, sizeof(state));
 
@@ -172,7 +173,7 @@ inline void AES::decrypt(const uint8_t *in, uint8_t *out)
     memset(state, 0, sizeof(state));
 }
 
-inline void AES::add_round_key(const uint32_t *key)
+inline void Aes::add_round_key(const word *key)
 {
     state[0]    ^= key[0] >> 24; 
     state[1]    ^= key[0] >> 16;
@@ -192,15 +193,15 @@ inline void AES::add_round_key(const uint32_t *key)
     state[15]   ^= key[3];
 }
 
-inline void AES::sub_bytes()
+inline void Aes::sub_bytes()
 {
     for (auto &s : state)
         s = sbox[s];
 }
 
-inline void AES::shift_rows()
+inline void Aes::shift_rows()
 {   
-    uint8_t tmp[NB * NK] = {
+    byte tmp[NB * NK] = {
         state[0], state[5], state[10], state[15], 
         state[4], state[9], state[14], state[3],
         state[8], state[13], state[2], state[7],
@@ -209,9 +210,9 @@ inline void AES::shift_rows()
     memcpy(state, tmp, sizeof(state));
 }
 
-inline void AES::mix_columns()
+inline void Aes::mix_columns()
 {
-    uint8_t tmp[NB * NK] = {};
+    byte tmp[NB * NK] = {};
 
     mult_row_col(&state[NB * 0], &tmp[NB * 0]);
     mult_row_col(&state[NB * 1], &tmp[NB * 1]);
@@ -221,15 +222,15 @@ inline void AES::mix_columns()
     memcpy(state, tmp, sizeof(state));
 }
 
-inline void AES::inv_sub_bytes()
+inline void Aes::inv_sub_bytes()
 {
     for (auto &s : state)
         s = rsbox[s];
 }
 
-inline void AES::inv_shift_rows()
+inline void Aes::inv_shift_rows()
 {   
-    uint8_t tmp[NB * NK] = {
+    byte tmp[NB * NK] = {
         state[0], state[13], state[10], state[7], 
         state[4], state[1], state[14], state[11],
         state[8], state[5], state[2], state[15],
@@ -238,9 +239,9 @@ inline void AES::inv_shift_rows()
     memcpy(state, tmp, sizeof(state));
 }
 
-inline void AES::inv_mix_columns()
+inline void Aes::inv_mix_columns()
 {
-    uint8_t tmp[NB * NK] = {};
+    byte tmp[NB * NK] = {};
 
     inv_mult_row_col(&state[NB * 0], &tmp[NB * 0]);
     inv_mult_row_col(&state[NB * 1], &tmp[NB * 1]);
@@ -249,8 +250,6 @@ inline void AES::inv_mix_columns()
 
     memcpy(state, tmp, sizeof(state));
 }
-
-// !SECTION: Implementation
 
 }
 

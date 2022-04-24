@@ -1,16 +1,13 @@
-#ifndef AES_CCM
-#define AES_CCM
+#ifndef SHOC_AES_CCM_H
+#define SHOC_AES_CCM_H
 
-#include "aes_cbc_mac.h"
-#include "aes_ctr.h"
-#include <cstdio>
-#include <cctype>
-#include <span>
+#include "shoc/aes_cbc_mac.h"
+#include "shoc/aes_ctr.h"
 
-namespace creep {
+namespace shoc {
 
 template<size_t L>
-inline void ccm_ctr(AES &ctx, uint8_t *a_0, const uint8_t *nonce, const uint8_t *in, uint8_t *out, size_t len)
+inline void ccm_ctr(Aes &ctx, uint8_t *a_0, const uint8_t *nonce, const uint8_t *in, uint8_t *out, size_t len)
 {
     static_assert(L > 1 && L < 9, "invalid length field size");
 
@@ -41,7 +38,7 @@ inline void ccm_ctr(AES &ctx, uint8_t *a_0, const uint8_t *nonce, const uint8_t 
 }
 
 template<size_t L>
-inline void ccm_auth(AES &ctx, uint8_t *block, const uint8_t *nonce, const uint8_t *in, size_t len, const uint8_t *aad, size_t aad_len, size_t tag_len)
+inline void ccm_auth(Aes &ctx, uint8_t *block, const uint8_t *nonce, const uint8_t *in, size_t len, const uint8_t *aad, size_t aad_len, size_t tag_len)
 {
     static_assert(L > 1 && L < 9, "invalid length field size");
 
@@ -116,7 +113,7 @@ inline bool ccm_encrypt(
         tag_len & 1)
         return false;
 
-    AES ctx {key};
+    Aes ctx {key};
     uint8_t block[16];
 
     ccm_auth<L>(ctx, block, nonce, in, len, aad, aad_len, tag_len);
@@ -151,7 +148,7 @@ inline bool ccm_decrypt(
         tag_len & 1)
         return false;
 
-    AES ctx {key};
+    Aes ctx {key};
     uint8_t block[16];
     uint8_t mac[16];
 

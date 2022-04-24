@@ -1,13 +1,13 @@
 #include <gtest/gtest.h>
-#include "aes.h"
-#include "aes_ecb.h"
-#include "aes_cbc.h"
-#include "aes_cfb.h"
-#include "aes_ofb.h"
-#include "aes_ctr.h"
-#include "aes_ccm.h"
+#include "shoc/aes.h"
+#include "shoc/aes_ecb.h"
+#include "shoc/aes_cbc.h"
+#include "shoc/aes_cfb.h"
+#include "shoc/aes_ofb.h"
+#include "shoc/aes_ctr.h"
+#include "shoc/aes_ccm.h"
 
-using namespace creep;
+using namespace shoc;
 
 static const uint8_t test_key[16] = {
     0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c, 
@@ -37,7 +37,7 @@ TEST(Aes128, EncryptDecrypt)
     const uint8_t key[16] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     const uint8_t exp[16] = { 0x69, 0xc4, 0xe0, 0xd8, 0x6a, 0x7b, 0x04, 0x30, 0xd8, 0xcd, 0xb7, 0x80, 0x70, 0xb4, 0xc5, 0x5a };
 
-    AES ctx{key};
+    Aes ctx{key};
     ctx.encrypt(in, out);
     compare(out, exp, 16);
     ctx.decrypt(out, out);

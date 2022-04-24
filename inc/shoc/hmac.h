@@ -1,11 +1,11 @@
-#ifndef HMAC_H
-#define HMAC_H
+#ifndef SHOC_HMAC_H
+#define SHOC_HMAC_H
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 
-namespace creep {
+namespace shoc {
 
 template<class H>
 void hmac(const void *msg, size_t msg_len, const void *key, size_t key_len, uint8_t *digest)
@@ -45,20 +45,19 @@ void hmac(const void *msg, size_t msg_len, const void *key, size_t key_len, uint
 }
 
 template<class H>
-struct HMAC {
-
+struct Hmac {
     void init(const void *key, size_t key_len);
     void update(const void *msg, size_t msg_len);
     void final(uint8_t *out);
     void operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, uint8_t *out);
 private:
     H hash;
-    uint8_t k_pad[H::BLOCK_SIZE] = {};
-    uint8_t tk[H::SIZE] = {};
+    uint8_t k_pad[H::BLOCK_SIZE];
+    uint8_t tk[H::SIZE];
 };
 
 template<class H>
-void HMAC<H>::init(const void *key, size_t key_len)
+void Hmac<H>::init(const void *key, size_t key_len)
 {
     if (key_len > H::BLOCK_SIZE) {
 
@@ -85,13 +84,13 @@ void HMAC<H>::init(const void *key, size_t key_len)
 }
 
 template<class H>
-void HMAC<H>::update(const void *msg, size_t msg_len)
+void Hmac<H>::update(const void *msg, size_t msg_len)
 {
     hash.update(msg, msg_len);
 }
 
 template<class H>
-void HMAC<H>::final(uint8_t *out)
+void Hmac<H>::final(uint8_t *out)
 {
     hash.final(out);
     hash.init();
@@ -101,11 +100,9 @@ void HMAC<H>::final(uint8_t *out)
 }
 
 template<class H>
-void HMAC<H>::operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, uint8_t *out)
+void Hmac<H>::operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, uint8_t *out)
 {
-    init(key, key_len);
-    update(msg, msg_len);
-    final(out);
+    init(key, key_len), update(msg, msg_len), final(out);
 }
 
 }

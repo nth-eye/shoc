@@ -1,9 +1,9 @@
-#ifndef HKDF_H
-#define HKDF_H
+#ifndef SHOC_HKDF_H
+#define SHOC_HKDF_H
 
-#include "hmac.h"
+#include "shoc/hmac.h"
 
-namespace creep {
+namespace shoc {
 
 template<class H>
 bool hkdf(
@@ -15,7 +15,7 @@ bool hkdf(
     const uint8_t default_salt[H::SIZE] = {};
     uint8_t prk[H::SIZE];
     uint8_t t[H::SIZE];
-    HMAC<H> hmac;
+    Hmac<H> hmac;
 
     if (!salt || !salt_len) {
         salt = default_salt;

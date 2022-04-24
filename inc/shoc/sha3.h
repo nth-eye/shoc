@@ -1,9 +1,9 @@
-#ifndef SHA3_H
-#define SHA3_H
+#ifndef SHOC_SHA3_H
+#define SHOC_SHA3_H
 
-#include <cstddef>
+#include "shoc/util.h"
 
-namespace creep {
+namespace shoc {
 
 template <size_t L>
 struct Keccak {

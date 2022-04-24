@@ -1,55 +1,43 @@
-#ifndef SHA2_H
-#define SHA2_H
+#ifndef SHOC_SHA2_H
+#define SHOC_SHA2_H
 
-#include <cstdint>
-#include <cstddef>
+#include "shoc/util.h"
 #include <cstring>
+#include <cassert>
 
-namespace creep {
+namespace shoc {
 
-template <class T>
-constexpr T rol(T val, int shift)   { return (val << shift) | (val >> ((sizeof(T) * 8) - shift)); }
-template <class T>
-constexpr T ror(T val, int shift)   { return (val >> shift) | (val << ((sizeof(T) * 8) - shift)); }
-template <class T>
-constexpr T ch(T x, T y, T z)       { return (x & y) ^ (~x & z); }
-template <class T>
-constexpr T parity(T x, T y, T z)   { return x ^ y ^ z; }
-template <class T>
-constexpr T maj(T x, T y, T z)      { return (x & y) ^ (x & z) ^ (y & z); }
+constexpr int SHA2_WORD64_FLAG = 0x1000;
 
-constexpr int WORD64_FLAG = 0x1000;
-
-enum SHA2_Type {
+enum Sha2Type {
     SHA_224     = 224,
     SHA_256     = 256,
-    SHA_384     = 384 | WORD64_FLAG,
-    SHA_512     = 512 | WORD64_FLAG,
-    SHA_512_224 = 224 | WORD64_FLAG,
-    SHA_512_256 = 256 | WORD64_FLAG,
+    SHA_384     = 384 | SHA2_WORD64_FLAG,
+    SHA_512     = 512 | SHA2_WORD64_FLAG,
+    SHA_512_224 = 224 | SHA2_WORD64_FLAG,
+    SHA_512_256 = 256 | SHA2_WORD64_FLAG,
 };
 
-constexpr int operator&(SHA2_Type &lhs, int rhs)    { return int(lhs) & rhs; }
+constexpr int operator&(Sha2Type &lhs, int rhs)     { return int(lhs) & rhs; }
 
 template <int T> struct word_size                   { using type = uint32_t; };
-template <>      struct word_size<WORD64_FLAG>      { using type = uint64_t; };
+template <>      struct word_size<SHA2_WORD64_FLAG> { using type = uint64_t; };
 
-template<SHA2_Type T>
-struct SHA2 {
+template<Sha2Type T>
+struct Sha2 {
 
-    using byte = uint8_t;
-    using word = typename word_size<T & WORD64_FLAG>::type;
+    using word = typename word_size<T & SHA2_WORD64_FLAG>::type;
 
-    static constexpr size_t SIZE        = (T & ~WORD64_FLAG) / 8;
+    static constexpr size_t SIZE        = (T & ~SHA2_WORD64_FLAG) / 8;
     static constexpr size_t WORD_SIZE   = sizeof(word);
     static constexpr size_t BLOCK_SIZE  = 16 * WORD_SIZE;
     static constexpr size_t STATE_SIZE  = 8;
     static constexpr size_t PAD_START   = BLOCK_SIZE - WORD_SIZE * 2;
 
     void init();
-    bool update(const void *in, size_t len);
-    bool final(byte out[SIZE]);
-    bool operator()(const void *in, size_t len, byte out[SIZE]);
+    void update(const void *in, size_t len);
+    void final(byte out[SIZE]);
+    void operator()(const void *in, size_t len, byte out[SIZE]);
 private:
     void pad();
     void process();
@@ -70,8 +58,8 @@ private:
     byte block_idx;
 };
 
-template<SHA2_Type T>
-void SHA2<T>::init()
+template<Sha2Type T>
+void Sha2<T>::init()
 {
 #define INIT_HASH(...) {                        \
     constexpr uint64_t h[] = {__VA_ARGS__};     \
@@ -96,34 +84,28 @@ void SHA2<T>::init()
 #undef INIT_HASH
 }
 
-template<SHA2_Type T>
-bool SHA2<T>::update(const void *in, size_t len)
+template<Sha2Type T>
+void Sha2<T>::update(const void *in, size_t len)
 {
-    if (!in)
-        return false;
+    assert(in);
 
-    auto p = static_cast<const uint8_t*>(in);
+    auto p = static_cast<const byte*>(in);
 
     while (len--) {
 
         block[block_idx++] = *p++;
 
-        if ((length_low  += 8)  == 0 && 
-            (length_high += 1)  == 0) 
-        {
-            return false;
-        }
+        if ((length_low += 8) == 0)
+            length_high += 1;
         if (block_idx == BLOCK_SIZE)
             process();
     }
-    return true;
 }
 
-template<SHA2_Type T>
-bool SHA2<T>::final(byte out[SIZE])
+template<Sha2Type T>
+void Sha2<T>::final(byte out[SIZE])
 {
-    if (!out)
-        return false;
+    assert(out);
 
     pad();
 
@@ -131,19 +113,16 @@ bool SHA2<T>::final(byte out[SIZE])
         out[i] = state[i / WORD_SIZE] >> (j & ((WORD_SIZE * 8) - 1));
 
     memset(this, 0, sizeof(*this));
-
-    return true;
 }
 
-template<SHA2_Type T>
-bool SHA2<T>::operator()(const void *in, size_t len, byte out[SIZE])
+template<Sha2Type T>
+void Sha2<T>::operator()(const void *in, size_t len, byte out[SIZE])
 {
-    init();
-    return update(in, len) && final(out);
+    init(), update(in, len), final(out);
 }
 
-template<SHA2_Type T>
-void SHA2<T>::pad()
+template<Sha2Type T>
+void Sha2<T>::pad()
 {
     block[block_idx++] = 0x80;
 
@@ -160,8 +139,8 @@ void SHA2<T>::pad()
     process();
 }
 
-template<SHA2_Type T>
-void SHA2<T>::process()
+template<Sha2Type T>
+void Sha2<T>::process()
 {
     enum { a, b, c, d, e, f, g, h };
 

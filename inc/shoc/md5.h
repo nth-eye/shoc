@@ -1,23 +1,22 @@
-#ifndef MD5_H
-#define MD5_H
+#ifndef SHOC_MD5_H
+#define SHOC_MD5_H
 
-#include <cstdint>
-#include <cstddef>
+#include "shoc/util.h"
 #include <cstring>
+#include <cassert>
 
-// namespace creep {
+namespace shoc {
 
-// struct MD5 {
+// struct Md5 {
+
+//     using word = uint32_t;
 
 //     static constexpr size_t SIZE = 16;
 
-//     using byte = uint8_t;
-//     using word = uint32_t;
-
 //     void init();
-//     bool update(const void *in, size_t len);
-//     bool final(byte out[SIZE]);
-//     bool operator()(const void *in, size_t len, byte out[SIZE]);
+//     void update(const void *in, size_t len);
+//     void final(byte out[SIZE]);
+//     void operator()(const void *in, size_t len, byte out[SIZE]);
 // private:
 //     void pad();
 //     void process();
@@ -33,7 +32,7 @@
 //     byte block_idx;
 // };
 
-// void MD5::init()
+// void Md5::init()
 // {
 //     state[0] = 0x67452301;
 //     state[1] = 0xefcdab89;
@@ -43,12 +42,11 @@
 //     block_idx = length_high = length_low = 0;
 // }
 
-// bool MD5::update(const void *in, size_t len)
+// void Md5::update(const void *in, size_t len)
 // {
-//     if (!in)
-//         return false;
+//     assert(in);
 
-//     auto p = static_cast<const uint8_t*>(in);
+//     auto p = static_cast<const byte*>(in);
 
 //     while (len--) {
 
@@ -56,24 +54,22 @@
 
 //         if ((length_low += 8) == 0)
 //             length_high += 1;
-
 //         if (block_idx == BLOCK_SIZE)
 //             process();
 //     }
-//     return true;
 // }
 
-// bool MD5::final(byte out[SIZE])
+// void Md5::final(byte out[SIZE])
 // {
 
 // }
 
-// bool MD5::operator()(const void *in, size_t len, byte out[SIZE])
+// void Md5::operator()(const void *in, size_t len, byte out[SIZE])
 // {
 
 // }
 
-// void MD5::pad()
+// void Md5::pad()
 // {
 //     // block[block_idx++] = 0x80;
 
@@ -90,11 +86,11 @@
 //     // transform();
 // }
 
-// void MD5::process()
+// void Md5::process()
 // {
 
 // }
 
-// }
+}
 
 #endif

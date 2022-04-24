@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <string_view>
-#include "hmac.h"
-#include "sha1.h"
-#include "sha2.h"
+#include "shoc/hmac.h"
+#include "shoc/sha1.h"
+#include "shoc/sha2.h"
 
-using namespace creep;
+using namespace shoc;
 
 struct Data {
     std::string_view key;
@@ -15,18 +15,14 @@ struct Data {
 template<class H, size_t N>
 void hmac_check(const Data (&test)[N])
 {
-    HMAC<H> hmac;
-    uint8_t digest[H::SIZE] = {};
-    char    result[H::SIZE * 2] = {};
+    Hmac<H> hmac;
+    byte bin[H::SIZE];
+    char str[H::SIZE * 2];
 
     for (auto it : test) {
-        hmac(
-            it.msg.data(), it.msg.size(), 
-            it.key.data(), it.key.size(), 
-            digest);
-        for (size_t i = 0; i < sizeof(digest); ++i)
-            sprintf(&result[i * 2], "%02x", digest[i]);
-        EXPECT_STREQ(it.exp.data(), result);
+        hmac(it.msg.data(), it.msg.size(), it.key.data(), it.key.size(), bin);
+        bin_to_hex(bin, sizeof(bin), str, sizeof(str));
+        EXPECT_STREQ(it.exp.data(), str);
     }
 }
 
@@ -37,7 +33,7 @@ TEST(Hmac, Sha1)
             "The quick brown fox jumps over the lazy dog",
             "de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9"  },
     };
-    hmac_check<SHA1>(test);
+    hmac_check<Sha1>(test);
 }
 
 TEST(Hmac, Sha224)
@@ -57,7 +53,7 @@ TEST(Hmac, Sha224)
             "6c11506874013cac6a2abc1bb382627cec6a90d86efc012de7afec5a"  },
             
     };
-    hmac_check<SHA2<SHA_224>>(test);
+    hmac_check<Sha2<SHA_224>>(test);
 }
 
 TEST(Hmac, Sha256)
@@ -76,7 +72,7 @@ TEST(Hmac, Sha256)
             "\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd",
             "82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b"  },
     };
-    hmac_check<SHA2<SHA_256>>(test);
+    hmac_check<Sha2<SHA_256>>(test);
 }
 
 TEST(Hmac, Sha384)
@@ -95,7 +91,7 @@ TEST(Hmac, Sha384)
             "\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd",
             "3e8a69b7783c25851933ab6290af6ca77a9981480850009cc5577c6e1f573b4e6801dd23c4a7d679ccf8a386c674cffb"  },
     };
-    hmac_check<SHA2<SHA_384>>(test);
+    hmac_check<Sha2<SHA_384>>(test);
 }
 
 TEST(Hmac, Sha512)
@@ -114,5 +110,5 @@ TEST(Hmac, Sha512)
             "\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd",
             "b0ba465637458c6990e5a8c5f61d4af7e576d97ff94b872de76f8050361ee3dba91ca5c11aa25eb4d679275cc5788063a5f19741120c4f2de2adebeb10a298dd"  },
     };
-    hmac_check<SHA2<SHA_512>>(test);
+    hmac_check<Sha2<SHA_512>>(test);
 }

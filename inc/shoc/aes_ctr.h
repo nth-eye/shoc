@@ -1,9 +1,9 @@
-#ifndef AES_CTR_H
-#define AES_CTR_H
+#ifndef SHOC_AES_CTR_H
+#define SHOC_AES_CTR_H
 
-#include "aes.h"
+#include "shoc/aes.h"
 
-namespace creep {
+namespace shoc {
 
 template<size_t L>
 inline void ctr_inc_counter(uint8_t *block)
@@ -22,7 +22,7 @@ inline bool ctr_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in
     uint8_t nonce[16];
     memcpy(nonce, iv, 16);
 
-    AES ctx{key};
+    Aes ctx{key};
 
     auto end = out + len;
     auto idx = 0;

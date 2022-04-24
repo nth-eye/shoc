@@ -1,23 +1,22 @@
-#ifndef MD4_H
-#define MD4_H
+#ifndef SHOC_MD4_H
+#define SHOC_MD4_H
 
-#include <cstdint>
-#include <cstddef>
+#include "shoc/util.h"
 #include <cstring>
+#include <cassert>
 
-namespace creep {
+namespace shoc {
 
-struct MD4 {
+struct Md4 {
 
     static constexpr size_t SIZE = 16;
 
-    using byte = uint8_t;
     using word = uint32_t;
 
     void init();
-    bool update(const void *in, size_t len);
-    bool final(byte out[SIZE]);
-    bool operator()(const void *in, size_t len, byte out[SIZE]);
+    void update(const void *in, size_t len);
+    void final(byte out[SIZE]);
+    void operator()(const void *in, size_t len, byte out[SIZE]);
 private:
     void pad();
     void process();
@@ -25,11 +24,6 @@ private:
     static constexpr size_t STATE_SIZE  = 4;    // In words
     static constexpr size_t BLOCK_SIZE  = 64;   // In bytes
     static constexpr size_t PAD_START   = BLOCK_SIZE - 8;
-
-    static constexpr word rol(word x, int shift)            { return (x << shift) | (x >> (32 - shift)); }
-    static constexpr word ch(word x, word y, word z)        { return (x & y) | (~x & z); }
-    static constexpr word maj(word x, word y, word z)       { return (x & y) | (x & z) | (y & z); }
-    static constexpr word parity(word x, word y, word z)    { return x ^ y ^ z; }
     
     word length_low;
     word length_high;
@@ -38,7 +32,7 @@ private:
     byte block_idx;
 };
 
-inline void MD4::init()
+inline void Md4::init()
 {
     state[0] = 0x67452301;
     state[1] = 0xefcdab89;
@@ -48,12 +42,11 @@ inline void MD4::init()
     block_idx = length_high = length_low = 0;
 }
 
-inline bool MD4::update(const void *in, size_t len)
+inline void Md4::update(const void *in, size_t len)
 {
-    if (!in)
-        return false;
+    assert(in);
 
-    auto p = static_cast<const uint8_t*>(in);
+    auto p = static_cast<const byte*>(in);
 
     while (len--) {
 
@@ -61,17 +54,14 @@ inline bool MD4::update(const void *in, size_t len)
 
         if ((length_low += 8) == 0)
             length_high += 1;
-
         if (block_idx == BLOCK_SIZE)
             process();
     }
-    return true;
 }
 
-inline bool MD4::final(byte out[SIZE])
+inline void Md4::final(byte out[SIZE])
 {
-    if (!out)
-        return false;
+    assert(out);
 
     pad();
 
@@ -82,17 +72,14 @@ inline bool MD4::final(byte out[SIZE])
         out[j + 3] = state[i] >> 24;
     }
     memset(this, 0, sizeof(*this));
-
-    return true;
 }
 
-inline bool MD4::operator()(const void *in, size_t len, byte out[SIZE])
+inline void Md4::operator()(const void *in, size_t len, byte out[SIZE])
 {
-    init();
-    return update(in, len) && final(out);
+    init(), update(in, len), final(out);
 }
 
-inline void MD4::pad()
+inline void Md4::pad()
 {
     block[block_idx++] = 0x80;
 
@@ -109,7 +96,7 @@ inline void MD4::pad()
     process();
 }
 
-inline void MD4::process()
+inline void Md4::process()
 {
     word a = state[0];
     word b = state[1];

@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <span>
-#include "hkdf.h"
-#include "sha2.h"
+#include "shoc/hkdf.h"
+#include "shoc/sha2.h"
 
-using namespace creep;
+using namespace shoc;
 
 struct Data {
     const std::span<const uint8_t> ikm;
@@ -74,5 +74,5 @@ TEST(Hkdf, Sha256)
         { {ikm[0], 22}, {salt[0], 13}, {info[0], 10}, {exp[0], 42}, {out[0], 42}  },
         { {ikm[1], 80}, {salt[1], 80}, {info[1], 80}, {exp[1], 82}, {out[1], 82}  },
     };
-    hkdf_check<SHA2<SHA_256>>(test);
+    hkdf_check<Sha2<SHA_256>>(test);
 }

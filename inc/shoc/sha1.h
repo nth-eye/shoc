@@ -1,34 +1,28 @@
-#ifndef SHA1_H
-#define SHA1_H
+#ifndef SHOC_SHA1_H
+#define SHOC_SHA1_H
 
-#include <cstdint>
-#include <cstddef>
+#include "shoc/util.h"
 #include <cstring>
+#include <cassert>
 
-namespace creep {
+namespace shoc {
 
-struct SHA1 {
+struct Sha1 {
+
+    using word = uint32_t;
 
     static constexpr size_t SIZE        = 20;
     static constexpr size_t STATE_SIZE  = 5;    // In words
     static constexpr size_t BLOCK_SIZE  = 64;   // In bytes
     static constexpr size_t PAD_START   = BLOCK_SIZE - 8;
 
-    using byte = uint8_t;
-    using word = uint32_t;
-
     void init();
-    bool update(const void *in, size_t len);
-    bool final(byte out[SIZE]);
-    bool operator()(const void *in, size_t len, byte out[SIZE]);
+    void update(const void *in, size_t len);
+    void final(byte out[SIZE]);
+    void operator()(const void *in, size_t len, byte out[SIZE]);
 private:
     void pad();
     void process();
-
-    static constexpr word rol(word x, int shift)            { return (x << shift) | (x >> (32 - shift)); }
-    static constexpr word ch(word x, word y, word z)        { return (x & y) ^ (~x & z); }
-    static constexpr word maj(word x, word y, word z)       { return (x & y) ^ (x & z) ^ (y & z); }
-    static constexpr word parity(word x, word y, word z)    { return x ^ y ^ z; }
 
     word state[STATE_SIZE];
     word length_low;
@@ -37,7 +31,7 @@ private:
     byte block_idx;
 };
 
-inline void SHA1::init()
+inline void Sha1::init()
 {
     state[0] = 0x67452301u;
     state[1] = 0xefcdab89u;
@@ -48,32 +42,26 @@ inline void SHA1::init()
     block_idx = length_high = length_low = 0;
 }
 
-inline bool SHA1::update(const void *in, size_t len)
+inline void Sha1::update(const void *in, size_t len)
 {
-    if (!in)
-        return false;
+    assert(in);
 
-    auto p = static_cast<const uint8_t*>(in);
+    auto p = static_cast<const byte*>(in);
 
     while (len--) {
 
         block[block_idx++] = *p++;
 
-        if ((length_low  += 8)  == 0 && 
-            (length_high += 1)  == 0) 
-        {
-            return false;
-        }
+        if ((length_low += 8) == 0)
+            length_high += 1;
         if (block_idx == BLOCK_SIZE)
             process();
     }
-    return true;
 }
 
-inline bool SHA1::final(byte out[SIZE])
+inline void Sha1::final(byte out[SIZE])
 {
-    if (!out)
-        return false;
+    assert(out);
 
     pad();
 
@@ -84,17 +72,14 @@ inline bool SHA1::final(byte out[SIZE])
         out[j + 3] = state[i] >> 0;
     }
     memset(this, 0, sizeof(*this));
-
-    return true;
 }
 
-inline bool SHA1::operator()(const void *in, size_t len, byte out[SIZE])
+inline void Sha1::operator()(const void *in, size_t len, byte out[SIZE])
 {
-    init();
-    return update(in, len) && final(out);
+    init(), update(in, len), final(out);
 }
 
-inline void SHA1::pad()
+inline void Sha1::pad()
 {
     block[block_idx++] = 0x80;
 
@@ -111,7 +96,7 @@ inline void SHA1::pad()
     process();
 }
 
-inline void SHA1::process()
+inline void Sha1::process()
 {
     enum { a, b, c, d, e };
 
