@@ -5,6 +5,7 @@
 #include "shoc/md5.h"
 #include "shoc/sha1.h"
 #include "shoc/sha2.h"
+#include "shoc/gimli.h"
 
 using namespace shoc;
 
@@ -18,7 +19,7 @@ static void hash_check(const Data (&test)[N])
 {
     Hash hash;
     byte bin[Hash::SIZE] = {};
-    char str[Hash::SIZE * 2] = {};
+    char str[Hash::SIZE * 2 + 1] = {};
 
     for (auto it : test) {
         hash(it.msg.data(), it.msg.size(), bin);
@@ -197,4 +198,21 @@ TEST(Hash, Sha512_256)
             "3928e184fb8690f840da3988121d31be65cb9d3ef83ee6146feac861e19b563a" },
     };
     hash_check<Sha2<SHA_512_256>>(test);
+}
+
+TEST(Hash, Gimli)
+{
+    const Data test[] = {
+        { "There's plenty for the both of us, may the best Dwarf win.",
+            "4afb3ff784c7ad6943d49cf5da79facfa7c4434e1ce44f5dd4b28f91a84d22c8" },
+        { "If anyone was to ask for my opinion, which I note they're not, I'd say we were taking the long way around.",
+            "ba82a16a7b224c15bed8e8bdc88903a4006bc7beda78297d96029203ef08e07c" },
+        { "Speak words we can all understand!",
+            "8dd4d132059b72f8e8493f9afb86c6d86263e7439fc64cbb361fcbccf8b01267" },
+        { "It's true you don't see many Dwarf-women. And in fact, they are so alike in voice and appearance, that they are often mistaken for Dwarf-men. And this in turn has given rise to the belief that there are no Dwarf-women, and that Dwarves just spring out of holes in the ground! Which is, of course, ridiculous.", 
+            "8887a5367d961d6734ee1a0d4aee09caca7fd6b606096ff69d8ce7b9a496cd2f" },
+        { "",
+            "b0634b2c0b082aedc5c0a2fe4ee3adcfc989ec05de6f00addb04b3aaac271f67" },
+    };
+    hash_check<Gimli>(test);
 }

@@ -2,8 +2,6 @@
 #define SHOC_MD5_H
 
 #include "shoc/util.h"
-#include <cstring>
-#include <cassert>
 
 namespace shoc {
 
@@ -19,7 +17,7 @@ namespace shoc {
 //     void operator()(const void *in, size_t len, byte out[SIZE]);
 // private:
 //     void pad();
-//     void process();
+//     void step();
 
 //     static constexpr size_t STATE_SIZE      = 4;    // In words
 //     static constexpr size_t BLOCK_SIZE      = 64;   // In bytes
@@ -55,7 +53,7 @@ namespace shoc {
 //         if ((length_low += 8) == 0)
 //             length_high += 1;
 //         if (block_idx == BLOCK_SIZE)
-//             process();
+//             step();
 //     }
 // }
 
@@ -74,10 +72,10 @@ namespace shoc {
 //     // block[block_idx++] = 0x80;
 
 //     // if (block_idx > LENGTH_START) {
-//     //     memset(block + block_idx, 0, BLOCK_SIZE - block_idx);
+//     //     fill(block + block_idx, 0, BLOCK_SIZE - block_idx);
 //     //     transform();
 //     // }
-//     // memset(block + block_idx, 0, LENGTH_START - block_idx);
+//     // fill(block + block_idx, 0, LENGTH_START - block_idx);
 
 //     // for (size_t i = 0, j = 0; i < 4; ++i, j += 8) {
 //     //     block[BLOCK_SIZE - 8 + i] = length_low  >> j;
@@ -86,7 +84,7 @@ namespace shoc {
 //     // transform();
 // }
 
-// void Md5::process()
+// void Md5::step()
 // {
 
 // }

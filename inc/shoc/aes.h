@@ -2,8 +2,6 @@
 #define SHOC_AES_H
 
 #include "shoc/util.h"
-#include <cstring>
-#include <cassert>
 
 namespace shoc {
 
@@ -137,7 +135,7 @@ inline void Aes::init(const byte *key)
 
 inline void Aes::encrypt(const byte *in, byte *out)
 {
-    memcpy(state, in, sizeof(state));
+    copy(state, in, sizeof(state));
 
     add_round_key(&words[NB * 0]);
     for (int round = 1; round < NR; ++round) {
@@ -150,13 +148,13 @@ inline void Aes::encrypt(const byte *in, byte *out)
     shift_rows();
     add_round_key(&words[NB * NR]);
     
-    memcpy(out, state, sizeof(state));
-    memset(state, 0, sizeof(state));
+    copy(out, state, sizeof(state));
+    zero(state, sizeof(state));
 }
 
 inline void Aes::decrypt(const byte *in, byte *out)
 {
-    memcpy(state, in, sizeof(state));
+    copy(state, in, sizeof(state));
 
     add_round_key(&words[NB * NR]);
     for (int round = NR - 1; round > 0; --round) {
@@ -169,8 +167,8 @@ inline void Aes::decrypt(const byte *in, byte *out)
     inv_sub_bytes();
     add_round_key(&words[NB * 0]);
     
-    memcpy(out, state, sizeof(state));
-    memset(state, 0, sizeof(state));
+    copy(out, state, sizeof(state));
+    zero(state, sizeof(state));
 }
 
 inline void Aes::add_round_key(const word *key)
@@ -207,7 +205,7 @@ inline void Aes::shift_rows()
         state[8], state[13], state[2], state[7],
         state[12], state[1], state[6], state[11],
     };
-    memcpy(state, tmp, sizeof(state));
+    copy(state, tmp, sizeof(state));
 }
 
 inline void Aes::mix_columns()
@@ -219,7 +217,7 @@ inline void Aes::mix_columns()
     mult_row_col(&state[NB * 2], &tmp[NB * 2]);
     mult_row_col(&state[NB * 3], &tmp[NB * 3]);
 
-    memcpy(state, tmp, sizeof(state));
+    copy(state, tmp, sizeof(state));
 }
 
 inline void Aes::inv_sub_bytes()
@@ -236,7 +234,7 @@ inline void Aes::inv_shift_rows()
         state[8], state[5], state[2], state[15],
         state[12], state[9], state[6], state[3],
     };
-    memcpy(state, tmp, sizeof(state));
+    copy(state, tmp, sizeof(state));
 }
 
 inline void Aes::inv_mix_columns()
@@ -248,7 +246,7 @@ inline void Aes::inv_mix_columns()
     inv_mult_row_col(&state[NB * 2], &tmp[NB * 2]);
     inv_mult_row_col(&state[NB * 3], &tmp[NB * 3]);
 
-    memcpy(state, tmp, sizeof(state));
+    copy(state, tmp, sizeof(state));
 }
 
 }

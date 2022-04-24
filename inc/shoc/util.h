@@ -1,73 +1,54 @@
 #ifndef SHOC_UTIL_H
 #define SHOC_UTIL_H
 
+#include <cassert>
 #include <bit>
+#include <algorithm>
 
 namespace shoc {
 
 using byte = uint8_t;
 
-constexpr void swap(auto &x, auto &y)
+constexpr void swap(auto &x, auto &y)   { std::swap(x, y); }
+constexpr auto rol(auto x, int s)       { return std::rotl(x, s); }
+constexpr auto ror(auto x, int s)       { return std::rotr(x, s); }
+constexpr bool little_endian()          { return std::endian::native == std::endian::little; }
+
+constexpr void copy(void *dst, const void *src, size_t count)
 {
-    std::swap(x, y);
+    std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + count, static_cast<byte*>(dst));
 }
 
-constexpr auto rol(auto val, int shift)   
-{ 
-    return std::rotl(val, shift);
-}
-
-constexpr auto ror(auto val, int shift)   
-{ 
-    return std::rotr(val, shift);
-}
-
-template <class T>
-constexpr T ch(T x, T y, T z)       
-{ 
-    return (x & y) ^ (~x & z); 
-}
-
-template <class T>
-constexpr T maj(T x, T y, T z)      
-{ 
-    return (x & y) ^ (x & z) ^ (y & z); 
-}
-
-template <class T>
-constexpr T parity(T x, T y, T z)   
-{ 
-    return x ^ y ^ z; 
-}
-
-constexpr uint32_t touint32(const uint8_t *p)
+constexpr void fill(void *dst, byte val, size_t count)
 {
-    return p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
+    std::fill_n(static_cast<byte*>(dst), count, val);
 }
 
-// constexpr void tobytes(uint32_t x, uint8_t *p)
-// {
+constexpr void zero(void *dst, size_t count)
+{
+    std::fill_n(static_cast<volatile byte*>(dst), count, 0);
+}
 
-// }
+template <class T>
+constexpr T ch(T x, T y, T z)           { return (x & y) ^ (~x & z); }
+
+template <class T>
+constexpr T maj(T x, T y, T z)          { return (x & y) ^ (x & z) ^ (y & z); }
+
+template <class T>
+constexpr T parity(T x, T y, T z)       { return x ^ y ^ z; }
 
 template<class T>
 constexpr T ipow(T base, T exp)
 {
-    T result = 1;
-    while (1) {
+    T res = 1;
+    while (exp) {
         if (exp & 1)
-            result *= base;
-        exp >>= 1;
-        if (!exp)
-            break;
+            res *= base;
         base *= base;
+        exp >>= 1;
     }
-    return result;
-}
-
-constexpr bool little_endian()
-{
-    return std::endian::native == std::endian::little;
+    return res;
 }
 
 /**
@@ -112,7 +93,7 @@ constexpr size_t hex_to_bin(const char *str, size_t str_len, uint8_t *bin, size_
 
     if (bin_len > max_bin_len) {
         bin_len = max_bin_len;
-        str_len = max_bin_len << 1; // return 0;
+        str_len = max_bin_len << 1;
     }
     if (str_len & 1) {
         int idx = str[0];

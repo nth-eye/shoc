@@ -11,7 +11,7 @@ inline bool cfb_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in
         return false;
 
     uint8_t buf[16] = {};
-    memcpy(buf, iv, 16);
+    copy(buf, iv, 16);
 
     Aes ctx{key};
 
@@ -31,7 +31,7 @@ inline bool cfb_decrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in
 
     uint8_t tmp = 0;
     uint8_t buf[16];
-    memcpy(buf, iv, 16);
+    copy(buf, iv, 16);
 
     Aes ctx{key};
 

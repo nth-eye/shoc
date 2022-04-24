@@ -2,16 +2,17 @@
 #define SHOC_MD4_H
 
 #include "shoc/util.h"
-#include <cstring>
-#include <cassert>
 
 namespace shoc {
 
 struct Md4 {
 
-    static constexpr size_t SIZE = 16;
-
     using word = uint32_t;
+
+    static constexpr size_t SIZE = 16;
+    static constexpr size_t STATE_SIZE  = 4;    // In words
+    static constexpr size_t BLOCK_SIZE  = 64;   // In bytes
+    static constexpr size_t PAD_START   = BLOCK_SIZE - 8;
 
     void init();
     void update(const void *in, size_t len);
@@ -19,11 +20,7 @@ struct Md4 {
     void operator()(const void *in, size_t len, byte out[SIZE]);
 private:
     void pad();
-    void process();
-
-    static constexpr size_t STATE_SIZE  = 4;    // In words
-    static constexpr size_t BLOCK_SIZE  = 64;   // In bytes
-    static constexpr size_t PAD_START   = BLOCK_SIZE - 8;
+    void step();
     
     word length_low;
     word length_high;
@@ -55,14 +52,13 @@ inline void Md4::update(const void *in, size_t len)
         if ((length_low += 8) == 0)
             length_high += 1;
         if (block_idx == BLOCK_SIZE)
-            process();
+            step();
     }
 }
 
 inline void Md4::final(byte out[SIZE])
 {
     assert(out);
-
     pad();
 
     for (size_t i = 0, j = 0; i < STATE_SIZE; ++i, j += 4) {
@@ -71,7 +67,7 @@ inline void Md4::final(byte out[SIZE])
         out[j + 2] = state[i] >> 16;
         out[j + 3] = state[i] >> 24;
     }
-    memset(this, 0, sizeof(*this));
+    zero(this, sizeof(*this));
 }
 
 inline void Md4::operator()(const void *in, size_t len, byte out[SIZE])
@@ -84,19 +80,19 @@ inline void Md4::pad()
     block[block_idx++] = 0x80;
 
     if (block_idx > PAD_START) {
-        memset(block + block_idx, 0, BLOCK_SIZE - block_idx);
-        process();
+        fill(block + block_idx, 0, BLOCK_SIZE - block_idx);
+        step();
     }
-    memset(block + block_idx, 0, PAD_START - block_idx);
+    fill(block + block_idx, 0, PAD_START - block_idx);
 
     for (size_t i = 0, j = 0; i < 4; ++i, j += 8) {
         block[BLOCK_SIZE - 8 + i] = length_low  >> j;
         block[BLOCK_SIZE - 4 + i] = length_high >> j;
     }
-    process();
+    step();
 }
 
-inline void Md4::process()
+inline void Md4::step()
 {
     word a = state[0];
     word b = state[1];

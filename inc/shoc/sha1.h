@@ -2,8 +2,6 @@
 #define SHOC_SHA1_H
 
 #include "shoc/util.h"
-#include <cstring>
-#include <cassert>
 
 namespace shoc {
 
@@ -22,7 +20,7 @@ struct Sha1 {
     void operator()(const void *in, size_t len, byte out[SIZE]);
 private:
     void pad();
-    void process();
+    void step();
 
     word state[STATE_SIZE];
     word length_low;
@@ -55,14 +53,13 @@ inline void Sha1::update(const void *in, size_t len)
         if ((length_low += 8) == 0)
             length_high += 1;
         if (block_idx == BLOCK_SIZE)
-            process();
+            step();
     }
 }
 
 inline void Sha1::final(byte out[SIZE])
 {
     assert(out);
-
     pad();
 
     for (size_t i = 0, j = 0; i < STATE_SIZE; ++i, j += 4) {
@@ -71,7 +68,7 @@ inline void Sha1::final(byte out[SIZE])
         out[j + 2] = state[i] >> 8;
         out[j + 3] = state[i] >> 0;
     }
-    memset(this, 0, sizeof(*this));
+    zero(this, sizeof(*this));
 }
 
 inline void Sha1::operator()(const void *in, size_t len, byte out[SIZE])
@@ -84,26 +81,26 @@ inline void Sha1::pad()
     block[block_idx++] = 0x80;
 
     if (block_idx > PAD_START) {
-        memset(block + block_idx, 0, BLOCK_SIZE - block_idx);
-        process();
+        fill(block + block_idx, 0, BLOCK_SIZE - block_idx);
+        step();
     }
-    memset(block + block_idx, 0, PAD_START - block_idx);
+    fill(block + block_idx, 0, PAD_START - block_idx);
 
     for (size_t i = 0, j = 0; i < 4; ++i, j += 8) {
         block[BLOCK_SIZE - 1 - i] = length_low  >> j;
         block[BLOCK_SIZE - 5 - i] = length_high >> j;
     }
-    process();
+    step();
 }
 
-inline void Sha1::process()
+inline void Sha1::step()
 {
     enum { a, b, c, d, e };
 
     word w[80];
     word var[STATE_SIZE];
     
-    memcpy(var, state, sizeof(state));
+    copy(var, state, sizeof(state));
 
     for (size_t t = 0; t < 16; ++t) {
         w[t]  = block[t * 4]     << 24;

@@ -7,7 +7,7 @@
 namespace shoc {
 
 template<class H>
-uint32_t hotp(void *key, size_t key_len, uint64_t count, int mod)
+uint32_t hotp(const void *key, size_t key_len, uint64_t count, int mod)
 {
     static_assert(H::SIZE >= 20, "HOTP hash algorithm must provide at least 20 byte long value");
 

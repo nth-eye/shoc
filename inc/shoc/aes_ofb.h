@@ -11,7 +11,7 @@ inline bool ofb_encrypt(const uint8_t *key, const uint8_t *iv, const uint8_t *in
         return false;
 
     uint8_t buf[16];
-    memcpy(buf, iv, 16);
+    copy(buf, iv, 16);
 
     Aes ctx{key};
 

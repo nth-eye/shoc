@@ -2,8 +2,6 @@
 #define SHOC_MD2_H
 
 #include "shoc/util.h"
-#include <cstring>
-#include <cassert>
 
 namespace shoc {
 
@@ -16,7 +14,7 @@ struct Md2 {
     void final(byte out[SIZE]);
     void operator()(const void *in, size_t len, byte out[SIZE]);
 private:
-    void process();
+    void step();
 
     byte checksum[16];
     byte state[16];
@@ -31,7 +29,7 @@ inline void Md2::operator()(const void *in, size_t len, byte out[SIZE])
 
 inline void Md2::init()
 {
-    memset(this, 0, sizeof(*this));
+    fill(this, 0, sizeof(*this));
 }
 
 inline void Md2::update(const void *in, size_t len)
@@ -43,25 +41,22 @@ inline void Md2::update(const void *in, size_t len)
     while (len--) {
         block[block_idx++] = *p++;
         if (block_idx == sizeof(block))
-            process();
+            step();
     }
 }
 
 inline void Md2::final(byte out[SIZE])
 {
     assert(out);
-
     auto padding = sizeof(block) - block_idx;
-    memset(block + block_idx, padding, padding);
-    process();
-
+    fill(block + block_idx, padding, padding);
+    step();
     update(checksum, sizeof(checksum));
-
-    memcpy(out, state, sizeof(state));
-    memset(this, 0, sizeof(*this));
+    copy(out, state, sizeof(state));
+    zero(this, sizeof(*this));
 }
 
-inline void Md2::process()
+inline void Md2::step()
 {
     constexpr byte table[] = { 
         0x29, 0x2e, 0x43, 0xc9, 0xa2, 0xd8, 0x7c, 0x01, 0x3d, 0x36, 0x54, 0xa1, 0xec, 0xf0, 0x06, 0x13, 
@@ -84,8 +79,8 @@ inline void Md2::process()
 
     byte buf[48];
 
-    memcpy(buf,                 state, sizeof(state));
-    memcpy(buf + sizeof(state), block, sizeof(block));
+    copy(buf,                 state, sizeof(state));
+    copy(buf + sizeof(state), block, sizeof(block));
 
     for (int i = 0; i < 16; ++i)
         buf[i + 32] = state[i] ^ block[i];
@@ -97,13 +92,13 @@ inline void Md2::process()
         t += i;
     }
 
-    memcpy(state, buf, sizeof(state));
+    copy(state, buf, sizeof(state));
 
     t = checksum[15];
     for (int i = 0; i < 16; ++i)
         t = checksum[i] ^= table[block[i] ^ t];
 
-    memset(buf, 0, sizeof(buf));
+    zero(buf, sizeof(buf));
 
     block_idx = 0;
 };

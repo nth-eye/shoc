@@ -1,9 +1,7 @@
 #ifndef SHOC_HMAC_H
 #define SHOC_HMAC_H
 
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
+#include "shoc/util.h"
 
 namespace shoc {
 
@@ -25,8 +23,8 @@ void hmac(const void *msg, size_t msg_len, const void *key, size_t key_len, uint
         key_len = H::SIZE;
     }
 
-    memcpy(k_ipad, key, key_len);
-    memcpy(k_opad, key, key_len);
+    copy(k_ipad, key, key_len);
+    copy(k_opad, key, key_len);
 
     for (size_t i = 0; i < H::BLOCK_SIZE; ++i) {
         k_ipad[i] ^= 0x36;
@@ -69,16 +67,16 @@ void Hmac<H>::init(const void *key, size_t key_len)
         key_len = H::SIZE;
     }
 
-    memset(k_pad, 0, sizeof(k_pad));
-    memcpy(k_pad, key, key_len);
+    fill(k_pad, 0, sizeof(k_pad));
+    copy(k_pad, key, key_len);
     for (auto &it : k_pad)
         it ^= 0x36;
 
     hash.init();
     hash.update(k_pad, sizeof(k_pad));
 
-    memset(k_pad, 0, sizeof(k_pad));
-    memcpy(k_pad, key, key_len);
+    fill(k_pad, 0, sizeof(k_pad));
+    copy(k_pad, key, key_len);
     for (auto &it : k_pad)
         it ^= 0x5C;
 }

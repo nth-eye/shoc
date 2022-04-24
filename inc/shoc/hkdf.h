@@ -40,9 +40,9 @@ bool hkdf(
         hmac.final(t);
 
         if (i == iterations)
-            memcpy(&okm[offset], t, okm_len - offset);
+            copy(&okm[offset], t, okm_len - offset);
         else
-            memcpy(&okm[offset], t, H::SIZE);
+            copy(&okm[offset], t, H::SIZE);
     }
     return true;
 }

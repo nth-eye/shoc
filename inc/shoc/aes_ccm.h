@@ -15,12 +15,12 @@ inline void ccm_ctr(Aes &ctx, uint8_t *a_0, const uint8_t *nonce, const uint8_t 
     constexpr size_t L_IDX = N + 1; // Start of length field 
 
     a_0[0] = L - 1;
-    memcpy(&a_0[1], nonce, N);
-    memset(&a_0[L_IDX], 0, L);
+    copy(&a_0[1], nonce, N);
+    fill(&a_0[L_IDX], 0, L);
 
     uint8_t buf[16];
     uint8_t a_i[16];
-    memcpy(a_i, a_0, 16);
+    copy(a_i, a_0, 16);
 
     auto end = out + len;
     auto idx = 0;
@@ -33,7 +33,7 @@ inline void ccm_ctr(Aes &ctx, uint8_t *a_0, const uint8_t *nonce, const uint8_t 
         *out++ = buf[idx++] ^ *in++;
     }
 
-    memset(&a_0[L_IDX], 0, L);
+    fill(&a_0[L_IDX], 0, L);
     ctx.encrypt(a_0, a_0);
 }
 
@@ -48,7 +48,7 @@ inline void ccm_auth(Aes &ctx, uint8_t *block, const uint8_t *nonce, const uint8
                 (((tag_len - 2) / 2) << 3)  |
                 (L - 1);
 
-    memcpy(&block[1], nonce, N);
+    copy(&block[1], nonce, N);
 
     for (size_t 
             i = N + 1, // Start of length field
@@ -118,7 +118,7 @@ inline bool ccm_encrypt(
 
     ccm_auth<L>(ctx, block, nonce, in, len, aad, aad_len, tag_len);
 
-    memcpy(tag, block, tag_len);
+    copy(tag, block, tag_len);
 
     ccm_ctr<L>(ctx, block, nonce, in, out, len);
 
@@ -160,7 +160,7 @@ inline bool ccm_decrypt(
     ccm_auth<L>(ctx, block, nonce, in, len, aad, aad_len, tag_len);
 
     if (memcmp(mac, block, tag_len)) {
-        memset(out, 0, len);
+        zero(out, len);
         return false;
     }
     return true;

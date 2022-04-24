@@ -17,10 +17,13 @@ void hmac_check(const Data (&test)[N])
 {
     Hmac<H> hmac;
     byte bin[H::SIZE];
-    char str[H::SIZE * 2];
+    char str[H::SIZE * 2 + 1];
 
     for (auto it : test) {
-        hmac(it.msg.data(), it.msg.size(), it.key.data(), it.key.size(), bin);
+        hmac(
+            it.msg.data(), it.msg.size(), 
+            it.key.data(), it.key.size(), 
+            bin);
         bin_to_hex(bin, sizeof(bin), str, sizeof(str));
         EXPECT_STREQ(it.exp.data(), str);
     }

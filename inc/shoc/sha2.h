@@ -2,8 +2,6 @@
 #define SHOC_SHA2_H
 
 #include "shoc/util.h"
-#include <cstring>
-#include <cassert>
 
 namespace shoc {
 
@@ -40,7 +38,7 @@ struct Sha2 {
     void operator()(const void *in, size_t len, byte out[SIZE]);
 private:
     void pad();
-    void process();
+    void step();
 
     constexpr uint32_t sigma_0(uint32_t x)   { return ror(x, 7)  ^ ror(x, 18) ^ (x >> 3);  }
     constexpr uint32_t sigma_1(uint32_t x)   { return ror(x, 17) ^ ror(x, 19) ^ (x >> 10); }
@@ -98,7 +96,7 @@ void Sha2<T>::update(const void *in, size_t len)
         if ((length_low += 8) == 0)
             length_high += 1;
         if (block_idx == BLOCK_SIZE)
-            process();
+            step();
     }
 }
 
@@ -106,13 +104,12 @@ template<Sha2Type T>
 void Sha2<T>::final(byte out[SIZE])
 {
     assert(out);
-
     pad();
 
     for (int i = 0, j = -8; i < (int) SIZE; ++i, j -= 8)
         out[i] = state[i / WORD_SIZE] >> (j & ((WORD_SIZE * 8) - 1));
 
-    memset(this, 0, sizeof(*this));
+    zero(this, sizeof(*this));
 }
 
 template<Sha2Type T>
@@ -127,20 +124,20 @@ void Sha2<T>::pad()
     block[block_idx++] = 0x80;
 
     if (block_idx > PAD_START) {
-        memset(block + block_idx, 0, BLOCK_SIZE - block_idx);
-        process();
+        fill(block + block_idx, 0, BLOCK_SIZE - block_idx);
+        step();
     }
-    memset(block + block_idx, 0, PAD_START - block_idx);
+    fill(block + block_idx, 0, PAD_START - block_idx);
 
     for (size_t i = 0, j = 0; i < WORD_SIZE; ++i, j += 8) {
         block[BLOCK_SIZE - 1 - i]               = length_low  >> j;
         block[BLOCK_SIZE - 1 - i - WORD_SIZE]   = length_high >> j;
     }
-    process();
+    step();
 }
 
 template<Sha2Type T>
-void Sha2<T>::process()
+void Sha2<T>::step()
 {
     enum { a, b, c, d, e, f, g, h };
 

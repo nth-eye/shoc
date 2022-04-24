@@ -1,4 +1,3 @@
-#include <cstring>
 #include <cstdio>
 #include <ctime>
 #include "shoc/gimli.h"
@@ -27,11 +26,16 @@ clock_t measure_time(Fn &&fn, Ptr *ptr, Args &&...args)
     
 int main()
 {
-    shoc::Gimli state;
+    // shoc::Gimli state;
 
-    uint8_t data[256];
-    uint8_t digest[32];
-    size_t len = sizeof(data);
+    // uint8_t data[256];
+    // uint8_t digest[32];
+    // size_t len = sizeof(data);
 
-    printf("1: %lu clock_t \n", measure_time<10000000>(&shoc::Gimli::hash, &state, data, len, digest));
+    // printf("1: %lu clock_t \n", measure_time<1000000>(&shoc::Gimli::operator(), &state, data, len, digest));
+    // printf("2: %lu clock_t \n", measure_time<1000000>(&shoc::Gimli::hash, &state, data, len, digest));
+    // printf("1: %lu clock_t \n", measure_time<1000000>(&shoc::Gimli::operator(), &state, data, len, digest));
+    // printf("2: %lu clock_t \n", measure_time<1000000>(&shoc::Gimli::hash, &state, data, len, digest));
+    // printf("1: %lu clock_t \n", measure_time<1000000>(&shoc::Gimli::operator(), &state, data, len, digest));
+    // printf("2: %lu clock_t \n", measure_time<1000000>(&shoc::Gimli::hash, &state, data, len, digest));
 }
