@@ -3,7 +3,7 @@ project(shoc VERSION 0.1.0)
 
 add_library(shoclib INTERFACE)
 target_compile_features(shoclib INTERFACE cxx_std_20)
-target_compile_options(shoclib INTERFACE "-Wall" "-Wextra" "-Wpedantic")
+target_compile_options(shoclib INTERFACE "-Wall" "-Wextra" "-Wpedantic" "-O3")
 target_include_directories(shoclib INTERFACE inc)
 
 add_executable(shoc main.cpp)

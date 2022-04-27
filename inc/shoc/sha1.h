@@ -1,7 +1,7 @@
 #ifndef SHOC_SHA1_H
 #define SHOC_SHA1_H
 
-#include "shoc/util.h"
+#include "shoc/_util.h"
 
 namespace shoc {
 

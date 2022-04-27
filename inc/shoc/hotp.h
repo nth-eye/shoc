@@ -1,7 +1,7 @@
 #ifndef SHOC_HOTP_H
 #define SHOC_HOTP_H
 
-#include "shoc/util.h"
+#include "shoc/_util.h"
 #include "shoc/hmac.h"
 
 namespace shoc {

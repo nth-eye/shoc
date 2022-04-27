@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <bit>
+// #include <span>
 #include <algorithm>
 
 namespace shoc {
@@ -38,6 +39,35 @@ constexpr T maj(T x, T y, T z)          { return (x & y) ^ (x & z) ^ (y & z); }
 template <class T>
 constexpr T parity(T x, T y, T z)       { return x ^ y ^ z; }
 
+/**
+ * @brief Shift bits left in array of integer elements from least significant bit:
+ * 10000000'11100001 ==> 00000001'11000010. 
+ * If you view LSB as left, then it's a right shift from GCM perspective.
+ * 
+ * @tparam T Integer type
+ * @param x Array of integers
+ * @param len Number of elements
+ */
+template<class T>
+constexpr void shift_from_lsb(T *x, size_t len)
+{
+    if (!x || !len)
+        return;
+    for (int i = len - 1; i > 0; --i) {
+        x[i] <<= 1;
+        x[i] |= x[i - 1] >> (sizeof(T) * 8 - 1);
+    }
+    x[0] <<= 1;
+}
+
+/**
+ * @brief Integer power function.
+ * 
+ * @tparam T Integer type
+ * @param base Base
+ * @param exp Exponent
+ * @return 'base' to the power 'exp'
+ */
 template<class T>
 constexpr T ipow(T base, T exp)
 {
@@ -50,6 +80,130 @@ constexpr T ipow(T base, T exp)
     }
     return res;
 }
+
+/**
+ * @brief Get number of bytes required to store N bits.
+ * 
+ * @param n Number of bits to store
+ * @return Number of bytes
+ */
+constexpr size_t bytes_in_bits(size_t n)
+{ 
+    return (n >> 3) + !!(n & 7); 
+}
+
+/**
+ * @brief Integer with bit set at given position.
+ * 
+ * @param n Bit position
+ * @return Integer with set bit
+ */
+constexpr unsigned bit(unsigned n) 
+{ 
+    return 1ul << n; 
+}
+
+/**
+ * @brief Get n-th bit of a byte.
+ * 
+ * @param b Byte
+ * @param n Bit position from LSB
+ * @return Bit value
+ */
+constexpr bool get_bit(byte b, int n)
+{ 
+    return (b >> n) & 1; 
+}
+
+/**
+ * @brief Set n-th bit of a byte.
+ * 
+ * @param b Byte
+ * @param n Bit position from LSB
+ */
+constexpr void set_bit(byte &b, int n)
+{ 
+    b |= 1 << n; 
+}
+
+/**
+ * @brief Clear n-th bit of a byte.
+ * 
+ * @param b Byte
+ * @param n Bit position from LSB
+ */
+constexpr void clr_bit(byte &b, int n)
+{ 
+    b &= ~(1 << n); 
+}
+
+/**
+ * @brief Get n-th bit of an array (starting from LSB).
+ * 
+ * @param arr Array of bytes
+ * @param n Index of bit to get
+ * @return true if set
+ */
+constexpr bool get_arr_bit(const byte *arr, int n)
+{
+    return get_bit(arr[n >> 3], n & 7);
+}
+
+/**
+ * @brief Set n-th bit in an array of bytes (starting from LSB).
+ * 
+ * @param arr Array of bytes
+ * @param n Index of bit to set
+ */
+constexpr void set_arr_bit(byte *arr, int n)
+{
+    set_bit(arr[n >> 3], n & 7);
+}
+
+/**
+ * @brief Clear n-th bit in an array of bytes (starting from LSB).
+ * 
+ * @param arr Array of bytes
+ * @param n Index of bit to clear
+ */
+constexpr void clr_arr_bit(byte *arr, int n)
+{
+    clr_bit(arr[n >> 3], n & 7);
+}
+
+// /**
+//  * @brief Get n-th bit of an array (starting from MSB).
+//  * 
+//  * @param arr Array of bytes
+//  * @param n Index of bit to get
+//  * @return true if set
+//  */
+// constexpr bool get_arr_bit_r(const byte *arr, int n)
+// {
+//     return get_bit(arr[n >> 3], 7 - (n & 7));
+// }
+
+// /**
+//  * @brief Set n-th bit in an array of bytes (starting from MSB).
+//  * 
+//  * @param arr Array of bytes
+//  * @param n Index of bit to set
+//  */
+// constexpr void set_arr_bit_r(byte *arr, int n)
+// {
+//     set_bit(arr[n >> 3], 7 - (n & 7));
+// }
+
+// /**
+//  * @brief Clear n-th bit in an array of bytes (starting from MSB).
+//  * 
+//  * @param arr Array of bytes
+//  * @param n Index of bit to clear
+//  */
+// constexpr void clr_arr_bit_r(byte *arr, int n)
+// {
+//     clr_bit(arr[n >> 3], 7 - (n & 7));
+// }
 
 /**
  * @brief Convert string with hexadecimal characters ('0'...'F') to array of bytes.

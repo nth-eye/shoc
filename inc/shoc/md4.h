@@ -1,7 +1,7 @@
 #ifndef SHOC_MD4_H
 #define SHOC_MD4_H
 
-#include "shoc/util.h"
+#include "shoc/_util.h"
 
 namespace shoc {
 
