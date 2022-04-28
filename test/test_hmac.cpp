@@ -24,7 +24,7 @@ void hmac_check(const Data (&test)[N])
             it.msg.data(), it.msg.size(), 
             it.key.data(), it.key.size(), 
             bin);
-        bin_to_hex(bin, sizeof(bin), str, sizeof(str));
+        bin_to_str(bin, sizeof(bin), str, sizeof(str));
         EXPECT_STREQ(it.exp.data(), str);
     }
 }

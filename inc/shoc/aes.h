@@ -21,6 +21,7 @@ struct Aes {
     void init(const byte *key);
     void encrypt(const byte *in, byte *out);
     void decrypt(const byte *in, byte *out);
+    void operator()(const byte *in, byte *out);
 private:
     void add_round_key(const word *key);
 
@@ -169,6 +170,11 @@ inline void Aes::decrypt(const byte *in, byte *out)
     
     copy(out, state, sizeof(state));
     zero(state, sizeof(state));
+}
+
+inline void Aes::operator()(const byte *in, byte *out)
+{
+    encrypt(in, out);
 }
 
 inline void Aes::add_round_key(const word *key)

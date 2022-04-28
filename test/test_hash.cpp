@@ -23,7 +23,7 @@ static void hash_check(const Data (&test)[N])
 
     for (auto it : test) {
         hash(it.msg.data(), it.msg.size(), bin);
-        bin_to_hex(bin, sizeof(bin), str, sizeof(str));
+        bin_to_str(bin, sizeof(bin), str, sizeof(str));
         EXPECT_STREQ(it.exp.data(), str);
     }
 }

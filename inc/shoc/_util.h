@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include <bit>
-// #include <span>
 #include <algorithm>
 
 namespace shoc {
@@ -15,49 +14,150 @@ constexpr auto rol(auto x, int s)       { return std::rotl(x, s); }
 constexpr auto ror(auto x, int s)       { return std::rotr(x, s); }
 constexpr bool little_endian()          { return std::endian::native == std::endian::little; }
 
+/**
+ * @brief Copy from one memory region to another.
+ * 
+ * @param dst Destination
+ * @param src Source
+ * @param count Number of bytes
+ */
 constexpr void copy(void *dst, const void *src, size_t count)
 {
     std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + count, static_cast<byte*>(dst));
 }
 
+/**
+ * @brief Fill memory with given byte value.
+ * 
+ * @param dst Memory to fill
+ * @param val Byte value
+ * @param count Number of bytes
+ */
 constexpr void fill(void *dst, byte val, size_t count)
 {
     std::fill_n(static_cast<byte*>(dst), count, val);
 }
 
+/**
+ * @brief Reliably zero out memory region.
+ * 
+ * @param dst Memory to zero out
+ * @param count Number of bytes
+ */
 constexpr void zero(void *dst, size_t count)
 {
     std::fill_n(static_cast<volatile byte*>(dst), count, 0);
 }
 
+/**
+ * @brief Choose function, used in SHA and MD.
+ */
 template <class T>
-constexpr T ch(T x, T y, T z)           { return (x & y) ^ (~x & z); }
-
-template <class T>
-constexpr T maj(T x, T y, T z)          { return (x & y) ^ (x & z) ^ (y & z); }
-
-template <class T>
-constexpr T parity(T x, T y, T z)       { return x ^ y ^ z; }
+constexpr T ch(T x, T y, T z)
+{ 
+    return (x & y) ^ (~x & z); 
+}
 
 /**
- * @brief Shift bits left in array of integer elements from least significant bit:
- * 10000000'11100001 ==> 00000001'11000010. 
- * If you view LSB as left, then it's a right shift from GCM perspective.
+ * @brief Major function, used in SHA and MD.
+ */
+template <class T>
+constexpr T maj(T x, T y, T z)
+{ 
+    return (x & y) ^ (x & z) ^ (y & z); 
+}
+
+/**
+ * @brief Parity function, used in SHA and MD
+ */
+template <class T>
+constexpr T parity(T x, T y, T z)
+{ 
+    return x ^ y ^ z; 
+}
+
+/**
+ * @brief XOR block of bytes with another. Arrays must be of equal 
+ * length and valid pointers!
+ * 
+ * @tparam L Length of a block in bytes, default is 16
+ * @param x Destination array
+ * @param y Another array
+ */
+template<size_t L = 16>
+constexpr void xorb(byte *x, const byte *y)
+{
+    for (size_t i = 0; i < L; ++i)
+        x[i] ^= y[i];
+}
+
+/**
+ * @brief XOR block of bytes with another. Arrays must be of equal 
+ * length and valid pointers!
+ * 
+ * @param x Destination array
+ * @param y Another array
+ * @param len Length of a block in bytes
+ */
+constexpr void xorb(byte *x, const byte *y, size_t len)
+{
+    for (size_t i = 0; i < len; ++i)
+        x[i] ^= y[i];
+}
+
+/**
+ * @brief Increment counter bytes in a block, used in block-cipher modes
+ * such as CTR and GCM.
+ * 
+ * @tparam L Length of counter in bytes, default is 4
+ * @tparam B Total block length in bytes, default is 16 
+ * @param block Pointer to the beginning of a block, not counter
+ */
+template<size_t L = 4, size_t B = 16>
+constexpr void incc(byte *block)
+{
+    size_t i = B;
+    while (++block[--i] == 0 && i >= B - L);
+}
+
+/**
+ * @brief Shift bits left in array of integer elements from least significant bit 
+ * and considering 0-th byte as the right most.
+ * uint16_t example: 0b10000000'11100001 ==> 0b00000001'11000010. 
  * 
  * @tparam T Integer type
- * @param x Array of integers
+ * @tparam L Length of array, default is 16
+ * @param x Array of integers, nullptr not acceptable!
  * @param len Number of elements
  */
-template<class T>
-constexpr void shift_from_lsb(T *x, size_t len)
+template<class T, size_t L = 16>
+constexpr void shift_left(T *x)
 {
-    if (!x || !len)
-        return;
-    for (int i = len - 1; i > 0; --i) {
+    for (int i = L - 1; i > 0; --i) {
         x[i] <<= 1;
         x[i] |= x[i - 1] >> (sizeof(T) * 8 - 1);
     }
     x[0] <<= 1;
+}
+
+/**
+ * @brief Shift bits right in array of integer elements from most significant bit
+ * and considering 0-th byte as the left most.
+ * uint16_t example: 0b10000000'11100001 ==> 0b11000000'01110000. 
+ * 
+ * @tparam T Integer type
+ * @tparam L Length of array, default is 16
+ * @param x Array of integers, nullptr not acceptable!
+ * @param len Number of elements
+ */
+template<class T, size_t L = 16>
+constexpr void shift_right_reflected(T *x)
+{
+    for (int i = L - 1; i > 0; --i) {
+        x[i] >>= 1;
+        x[i] |= (x[i - 1] & 1) << (sizeof(T) * 8 - 1); 
+    }
+    x[0] >>= 1;
 }
 
 /**
@@ -171,40 +271,6 @@ constexpr void clr_arr_bit(byte *arr, int n)
     clr_bit(arr[n >> 3], n & 7);
 }
 
-// /**
-//  * @brief Get n-th bit of an array (starting from MSB).
-//  * 
-//  * @param arr Array of bytes
-//  * @param n Index of bit to get
-//  * @return true if set
-//  */
-// constexpr bool get_arr_bit_r(const byte *arr, int n)
-// {
-//     return get_bit(arr[n >> 3], 7 - (n & 7));
-// }
-
-// /**
-//  * @brief Set n-th bit in an array of bytes (starting from MSB).
-//  * 
-//  * @param arr Array of bytes
-//  * @param n Index of bit to set
-//  */
-// constexpr void set_arr_bit_r(byte *arr, int n)
-// {
-//     set_bit(arr[n >> 3], 7 - (n & 7));
-// }
-
-// /**
-//  * @brief Clear n-th bit in an array of bytes (starting from MSB).
-//  * 
-//  * @param arr Array of bytes
-//  * @param n Index of bit to clear
-//  */
-// constexpr void clr_arr_bit_r(byte *arr, int n)
-// {
-//     clr_bit(arr[n >> 3], 7 - (n & 7));
-// }
-
 /**
  * @brief Convert string with hexadecimal characters ('0'...'F') to array of bytes.
  * All non-hex chars will be mapped as 0. String with odd length will be interpeted
@@ -217,7 +283,7 @@ constexpr void clr_arr_bit(byte *arr, int n)
  * @param max_bin_len Output array max size 
  * @return Length of resulting array, 0 if failed
  */
-constexpr size_t hex_to_bin(const char *str, size_t str_len, uint8_t *bin, size_t max_bin_len)
+constexpr size_t str_to_bin(const char *str, size_t str_len, uint8_t *bin, size_t max_bin_len)
 {
     if (!str || !bin)
         return 0;
@@ -272,7 +338,7 @@ constexpr size_t hex_to_bin(const char *str, size_t str_len, uint8_t *bin, size_
  * @param max_str_len Output string maximum length, including 0-terminator
  * @return Resulting string length, 0 if failed
  */
-constexpr size_t bin_to_hex(const uint8_t *bin, size_t bin_len, char *str, size_t max_str_len)
+constexpr size_t bin_to_str(const uint8_t *bin, size_t bin_len, char *str, size_t max_str_len)
 {
     const char map[]= "0123456789abcdef";
 
