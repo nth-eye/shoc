@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <span>
-#include "shoc/hkdf.h"
-#include "shoc/sha2.h"
+#include "shoc/kdf/hkdf.h"
+#include "shoc/hash/sha2.h"
 
 using namespace shoc;
 

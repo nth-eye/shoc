@@ -50,30 +50,17 @@ constexpr void zero(void *dst, size_t count)
 }
 
 /**
- * @brief Choose function, used in SHA and MD.
+ * @brief XOR block of bytes with another. Arrays must be of equal 
+ * length and valid pointers!
+ * 
+ * @param x Destination array
+ * @param y Another array
+ * @param len Length of a block in bytes
  */
-template <class T>
-constexpr T ch(T x, T y, T z)
-{ 
-    return (x & y) ^ (~x & z); 
-}
-
-/**
- * @brief Major function, used in SHA and MD.
- */
-template <class T>
-constexpr T maj(T x, T y, T z)
-{ 
-    return (x & y) ^ (x & z) ^ (y & z); 
-}
-
-/**
- * @brief Parity function, used in SHA and MD
- */
-template <class T>
-constexpr T parity(T x, T y, T z)
-{ 
-    return x ^ y ^ z; 
+constexpr void xorb(byte *x, const byte *y, size_t len)
+{
+    for (size_t i = 0; i < len; ++i)
+        x[i] ^= y[i];
 }
 
 /**
@@ -92,21 +79,48 @@ constexpr void xorb(byte *x, const byte *y)
 }
 
 /**
- * @brief XOR block of bytes with another. Arrays must be of equal 
- * length and valid pointers!
+ * @brief Put integer into array in big endian order.
  * 
- * @param x Destination array
- * @param y Another array
- * @param len Length of a block in bytes
+ * @tparam T Integer type
+ * @param val Input integer
+ * @param out Output array
  */
-constexpr void xorb(byte *x, const byte *y, size_t len)
+template<class T>
+constexpr void putbe(T val, byte *out)
 {
-    for (size_t i = 0; i < len; ++i)
-        x[i] ^= y[i];
+    for (int i = sizeof(T) * 8 - 8; i >= 0; i -= 8)
+        *out++ = val >> i;
 }
 
 /**
- * @brief Increment counter bytes in a block, used in block-cipher modes
+ * @brief Choose function, used in SHA and MD.
+ */
+template <class T>
+constexpr T ch(T x, T y, T z)
+{ 
+    return (x & y) ^ (~x & z); 
+}
+
+/**
+ * @brief Major function, used in SHA and MD.
+ */
+template <class T>
+constexpr T maj(T x, T y, T z)
+{ 
+    return (x & y) ^ (x & z) ^ (y & z); 
+}
+
+/**
+ * @brief Parity function, used in SHA and MD.
+ */
+template <class T>
+constexpr T parity(T x, T y, T z)
+{ 
+    return x ^ y ^ z; 
+}
+
+/**
+ * @brief Increment counter bytes in a block, used in block-cipher mode
  * such as CTR and GCM.
  * 
  * @tparam L Length of counter in bytes, default is 4

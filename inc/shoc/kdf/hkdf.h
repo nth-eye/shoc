@@ -1,7 +1,7 @@
-#ifndef SHOC_HKDF_H
-#define SHOC_HKDF_H
+#ifndef SHOC_KDF_HKDF_H
+#define SHOC_KDF_HKDF_H
 
-#include "shoc/hmac.h"
+#include "shoc/mac/hmac.h"
 
 namespace shoc {
 

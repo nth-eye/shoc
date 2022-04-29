@@ -1,5 +1,5 @@
-#ifndef SHOC_AES_H
-#define SHOC_AES_H
+#ifndef SHOC_CIPHER_AES_H
+#define SHOC_CIPHER_AES_H
 
 #include "shoc/_util.h"
 
@@ -17,8 +17,17 @@ struct Aes {
     using word = uint32_t;
 
     Aes() = default;
-    Aes(const byte *key) { init(key); }
+    Aes(const byte *key) 
+    { 
+        init(key); 
+    }
+    ~Aes() 
+    { 
+        deinit(); 
+    }
+
     void init(const byte *key);
+    void deinit();
     void encrypt(const byte *in, byte *out);
     void decrypt(const byte *in, byte *out);
     void operator()(const byte *in, byte *out);
@@ -132,6 +141,11 @@ inline void Aes::init(const byte *key)
         }
         words[i] = words[i - NK] ^ tmp;
     }
+}
+
+inline void Aes::deinit()
+{
+    zero(this, sizeof(*this));
 }
 
 inline void Aes::encrypt(const byte *in, byte *out)

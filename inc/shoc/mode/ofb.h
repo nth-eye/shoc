@@ -1,5 +1,5 @@
-#ifndef SHOC_OFB_H
-#define SHOC_OFB_H
+#ifndef SHOC_MODE_OFB_H
+#define SHOC_MODE_OFB_H
 
 #include "shoc/_util.h"
 
@@ -7,7 +7,7 @@ namespace shoc {
 
 /**
  * @brief Encrypt with block cipher in output feedback mode.
- * All arguments MUST be valid pointers.
+ * All pointers MUST be valid.
  * 
  * @tparam E Block cipher
  * @param key Key
@@ -34,7 +34,7 @@ inline void ofb_encrypt(const byte *key, const byte *iv, const byte *in, byte *o
 
 /**
  * @brief Decrypt with block cipher in output feedback mode. 
- * All arguments MUST be valid pointers.
+ * All pointers MUST be valid.
  * 
  * @tparam E Block cipher
  * @param key Key

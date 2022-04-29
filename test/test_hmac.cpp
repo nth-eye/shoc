@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <string_view>
-#include "shoc/hmac.h"
-#include "shoc/sha1.h"
-#include "shoc/sha2.h"
+#include "shoc/mac/hmac.h"
+#include "shoc/hash/sha1.h"
+#include "shoc/hash/sha2.h"
 
 using namespace shoc;
 

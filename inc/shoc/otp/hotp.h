@@ -1,8 +1,7 @@
-#ifndef SHOC_HOTP_H
-#define SHOC_HOTP_H
+#ifndef SHOC_OTP_HOTP_H
+#define SHOC_OTP_HOTP_H
 
-#include "shoc/_util.h"
-#include "shoc/hmac.h"
+#include "shoc/mac/hmac.h"
 
 namespace shoc {
 

@@ -1,7 +1,7 @@
-#ifndef SHOC_CBC_MAC_H
-#define SHOC_CBC_MAC_H
+#ifndef SHOC_MAC_CBC_MAC_H
+#define SHOC_MAC_CBC_MAC_H
 
-#include "shoc/aes.h"
+#include "shoc/_util.h"
 
 namespace shoc {
 

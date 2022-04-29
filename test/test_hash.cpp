@@ -1,11 +1,12 @@
 #include <gtest/gtest.h>
 #include <string_view>
-#include "shoc/md2.h"
-#include "shoc/md4.h"
-#include "shoc/md5.h"
-#include "shoc/sha1.h"
-#include "shoc/sha2.h"
-#include "shoc/gimli.h"
+#include "shoc/hash/md2.h"
+#include "shoc/hash/md4.h"
+#include "shoc/hash/md5.h"
+#include "shoc/hash/sha1.h"
+#include "shoc/hash/sha2.h"
+#include "shoc/hash/sha3.h"
+#include "shoc/hash/gimli.h"
 
 using namespace shoc;
 

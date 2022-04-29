@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <span>
-#include "shoc/hotp.h"
-#include "shoc/sha1.h"
+#include "shoc/otp/hotp.h"
+#include "shoc/hash/sha1.h"
 
 using namespace shoc;
 

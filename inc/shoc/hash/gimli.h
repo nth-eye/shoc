@@ -1,5 +1,5 @@
-#ifndef SHOC_GIMLI_H
-#define SHOC_GIMLI_H
+#ifndef SHOC_HASH_GIMLI_H
+#define SHOC_HASH_GIMLI_H
 
 #include "shoc/_util.h"
 

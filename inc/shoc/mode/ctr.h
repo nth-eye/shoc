@@ -1,12 +1,24 @@
-#ifndef SHOC_CTR_H
-#define SHOC_CTR_H
+#ifndef SHOC_MODE_CTR_H
+#define SHOC_MODE_CTR_H
 
 #include "shoc/_util.h"
 
 namespace shoc {
 
+/**
+ * @brief Basic counter mode function, used as a component in CTR and GCM modes. 
+ * Counter size is configurable. All pointers MUST be valid.
+ * 
+ * @tparam E Block cipher
+ * @tparam L Counter size, default is 4
+ * @param iv Initial vector
+ * @param in Input data
+ * @param out Output data
+ * @param len Data length
+ * @param ciph Cipher object, must be already initialized
+ */
 template<class E, size_t L = 4>
-inline void gctr(const byte *iv, const byte *in, byte *out, size_t len, E &ciph)
+inline void ctrf(const byte *iv, const byte *in, byte *out, size_t len, E &ciph)
 {
     byte buf[16];
     byte ctr[16];
@@ -24,7 +36,7 @@ inline void gctr(const byte *iv, const byte *in, byte *out, size_t len, E &ciph)
 
 /**
  * @brief Encrypt with block cipher in counter mode. Number of counter-bytes is configurable.
- * All arguments MUST be valid pointers.
+ * All pointers MUST be valid.
  * 
  * @tparam E Block cipher
  * @tparam L Counter size, default is 4 
@@ -38,12 +50,12 @@ template<class E, size_t L = 4>
 inline void ctr_encrypt(const byte *key, const byte *iv, const byte *in, byte *out, size_t len)
 {
     E ciph {key};
-    gctr<E, L>(iv, in, out, len, ciph);   
+    ctrf<E, L>(iv, in, out, len, ciph);   
 }
 
 /**
  * @brief Decrypt with block cipher in counter mode. Number of counter-bytes is configurable.
- * All arguments MUST be valid pointers.
+ * All pointers MUST be valid.
  * 
  * @tparam E Block cipher
  * @tparam L Counter size, default is 4 

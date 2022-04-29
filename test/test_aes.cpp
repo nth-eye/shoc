@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "shoc/aes.h"
+#include "shoc/cipher/aes.h"
 
 using namespace shoc;
 

@@ -1,5 +1,5 @@
-#ifndef SHOC_CFB_H
-#define SHOC_CFB_H
+#ifndef SHOC_MODE_CFB_H
+#define SHOC_MODE_CFB_H
 
 #include "shoc/_util.h"
 
@@ -7,7 +7,7 @@ namespace shoc {
 
 /**
  * @brief Encrypt with block cipher in cipher feedback mode.
- * All arguments MUST be valid pointers.
+ * All pointers MUST be valid.
  * 
  * @tparam E Block cipher
  * @param key Key
@@ -34,7 +34,7 @@ inline void cfb_encrypt(const byte *key, const byte *iv, const byte *in, byte *o
 
 /**
  * @brief Decrypt with block cipher in cipher feedback mode.
- * All arguments MUST be valid pointers.
+ * All pointers MUST be valid.
  * 
  * @tparam E Block cipher
  * @param key Key

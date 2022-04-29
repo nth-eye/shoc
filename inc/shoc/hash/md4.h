@@ -1,5 +1,5 @@
-#ifndef SHOC_MD4_H
-#define SHOC_MD4_H
+#ifndef SHOC_HASH_MD4_H
+#define SHOC_HASH_MD4_H
 
 #include "shoc/_util.h"
 

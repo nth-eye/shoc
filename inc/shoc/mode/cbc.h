@@ -1,5 +1,5 @@
-#ifndef SHOC_CBC_H
-#define SHOC_CBC_H
+#ifndef SHOC_MODE_CBC_H
+#define SHOC_MODE_CBC_H
 
 #include "shoc/_util.h"
 
@@ -7,7 +7,7 @@ namespace shoc {
 
 /**
  * @brief Encrypt with block cipher in cipher block chaining mode.
- * All arguments MUST be valid pointers and length is multiple of 16.
+ * All pointers MUST be valid and length is multiple of 16.
  * 
  * @tparam E Block cipher
  * @param key Key
@@ -34,7 +34,7 @@ inline void cbc_encrypt(const byte *key, const byte *iv, const byte *in, byte *o
 
 /**
  * @brief Decrypt with block cipher in cipher block chaining mode.
- * All arguments MUST be valid pointers and length is multiple of 16.
+ * All pointers MUST be valid and length is multiple of 16.
  * 
  * @tparam E Block cipher
  * @param key Key

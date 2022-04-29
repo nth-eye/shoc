@@ -1,5 +1,5 @@
-#ifndef SHOC_SHA1_H
-#define SHOC_SHA1_H
+#ifndef SHOC_HASH_SHA1_H
+#define SHOC_HASH_SHA1_H
 
 #include "shoc/_util.h"
 

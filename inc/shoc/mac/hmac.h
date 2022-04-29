@@ -1,5 +1,5 @@
-#ifndef SHOC_HMAC_H
-#define SHOC_HMAC_H
+#ifndef SHOC_MAC_HMAC_H
+#define SHOC_MAC_HMAC_H
 
 #include "shoc/_util.h"
 

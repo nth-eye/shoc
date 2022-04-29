@@ -1,11 +1,24 @@
-#ifndef SHOC_CCM_H
-#define SHOC_CCM_H
+#ifndef SHOC_MODE_CCM_H
+#define SHOC_MODE_CCM_H
 
-#include "shoc/modes/cbc_mac.h"
-#include "shoc/modes/ctr.h"
+#include "shoc/mac/cbc_mac.h"
+#include "shoc/mode/ctr.h"
 
 namespace shoc {
 
+/**
+ * @brief Basic counter mode function, has small differencel from ctrf(...) 
+ * and used specifically in CCM.
+ * 
+ * @tparam E Block cipher
+ * @tparam L Counter size
+ * @param ciph Cipher object, must be already initialized
+ * @param a_0 Initial block
+ * @param nonce Nonce
+ * @param in Data input
+ * @param out Data output
+ * @param len Data length
+ */
 template<class E, size_t L>
 inline void ccm_ctr(E &ciph, byte *a_0, const byte *nonce, const byte *in, byte *out, size_t len)
 {
@@ -22,21 +35,32 @@ inline void ccm_ctr(E &ciph, byte *a_0, const byte *nonce, const byte *in, byte 
     byte a_i[16];
     copy(a_i, a_0, 16);
 
-    auto end = out + len;
-    auto idx = 0;
-    
-    while (out < end) {
-        if ((idx &= 0xf) == 0) {
+    for (size_t i = 0; i < len; ++i) {
+        size_t idx = i & 0xf;
+        if (idx == 0) {
             incc<L>(a_i);
             ciph.encrypt(a_i, buf);
         }
-        *out++ = buf[idx++] ^ *in++;
+        *out++ = buf[idx] ^ *in++;
     }
-
     fill(a_0 + L_IDX, 0, L);
     ciph.encrypt(a_0, a_0);
 }
 
+/**
+ * @brief CCM authentication function. Used internally in CCM encrypt/decrypt process.
+ * 
+ * @tparam E Block cipher 
+ * @tparam L Counter size
+ * @param ciph  Cipher object, must be already initialized
+ * @param block Initial block
+ * @param nonce Nonce
+ * @param in Input data
+ * @param len Input length
+ * @param aad Additional authenticated data
+ * @param aad_len Additional authenticated data length
+ * @param tag_len Tag length, used to construct initial block
+ */
 template<class E, size_t L>
 inline void ccm_auth(E &ciph, byte *block, const byte *nonce, const byte *in, size_t len, const byte *aad, size_t aad_len, size_t tag_len)
 {
@@ -94,21 +118,22 @@ inline void ccm_auth(E &ciph, byte *block, const byte *nonce, const byte *in, si
 }
 
 /**
- * @brief 
+ * @brief Encrypt with block cipher in counter with CBC-MAC mode. 
+ * Number of counter-bytes is configurable. All pointers MUST be valid, 
+ * except when relevant length is 0.
  * 
- * @tparam E 
- * @tparam L 
- * @param key 
- * @param nonce 
- * @param aad 
- * @param aad_len 
- * @param tag 
- * @param tag_len 
- * @param in 
- * @param out 
- * @param len 
- * @return true 
- * @return false 
+ * @tparam E Block cipher
+ * @tparam L Counter size, default is 2
+ * @param key Key
+ * @param nonce Nonce, MUST be of length 15 - L
+ * @param aad Additional authenticated data
+ * @param aad_len Additional authenticated data length
+ * @param tag Output tag
+ * @param tag_len Desired length of tag
+ * @param in Plain text
+ * @param out Cipher txt
+ * @param len Text length
+ * @return true on success, false if tag length is invalid
  */
 template<class E, size_t L = 2>
 inline bool ccm_encrypt(
@@ -119,12 +144,6 @@ inline bool ccm_encrypt(
     const byte *in, 
           byte *out, size_t len)
 {
-    if (!len)
-        return false;
-
-    if (aad && !aad_len)
-        return false;
-
     if (tag_len > 16 || 
         tag_len < 4  || 
         tag_len & 1)
@@ -134,30 +153,31 @@ inline bool ccm_encrypt(
 
     byte block[16];
 
-    ccm_auth<L>(ciph, block, nonce, in, len, aad, aad_len, tag_len);
+    ccm_auth<E, L>(ciph, block, nonce, in, len, aad, aad_len, tag_len);
     copy(tag, block, tag_len);
-    ccm_ctr<L>(ciph, block, nonce, in, out, len);
+    ccm_ctr<E, L>(ciph, block, nonce, in, out, len);
     xorb(tag, block, tag_len);
 
     return true;
 }
 
 /**
- * @brief 
+ * @brief Decrypt with block cipher in counter with CBC-MAC mode. 
+ * Number of counter-bytes is configurable. All pointers MUST be valid, 
+ * except when relevant length is 0.
  * 
- * @tparam E 
- * @tparam L 
- * @param key 
- * @param nonce 
- * @param aad 
- * @param aad_len 
- * @param tag 
- * @param tag_len 
- * @param in 
- * @param out 
- * @param len 
- * @return true 
- * @return false 
+ * @tparam E Block cipher
+ * @tparam L Counter size, default is 2
+ * @param key Key
+ * @param nonce Nonce, MUST be of length 15 - L
+ * @param aad Additional authenticated data
+ * @param aad_len Additional authenticated data length
+ * @param tag Input tag
+ * @param tag_len Tag length
+ * @param in Cipher text
+ * @param out Plain txt
+ * @param len Text length
+ * @return true on success, false if tag length is invalid or authentication failed
  */
 template<class E, size_t L = 2>
 inline bool ccm_decrypt(
@@ -168,12 +188,6 @@ inline bool ccm_decrypt(
     const byte *in,
           byte *out, size_t len)
 {
-    if (!len)
-        return false;
-
-    if (aad && !aad_len)
-        return false;
-
     if (tag_len > 16 || 
         tag_len < 4  || 
         tag_len & 1)
@@ -184,12 +198,12 @@ inline bool ccm_decrypt(
     byte block[16];
     byte mac[16];
 
-    ccm_ctr<L>(ciph, block, nonce, in, out, len);
+    ccm_ctr<E, L>(ciph, block, nonce, in, out, len);
 
     for (size_t i = 0; i < tag_len; ++i)
         mac[i] = block[i] ^ tag[i];
 
-    ccm_auth<L>(ciph, block, nonce, in, len, aad, aad_len, tag_len);
+    ccm_auth<E, L>(ciph, block, nonce, in, len, aad, aad_len, tag_len);
 
     if (memcmp(mac, block, tag_len)) {
         zero(out, len);
