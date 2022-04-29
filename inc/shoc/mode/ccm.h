@@ -7,7 +7,7 @@
 namespace shoc {
 
 /**
- * @brief Basic counter mode function, has small differencel from ctrf(...) 
+ * @brief Basic counter mode function, has small differences from ctrf(...) 
  * and used specifically in CCM.
  * 
  * @tparam E Block cipher
@@ -129,7 +129,7 @@ inline void ccm_auth(E &ciph, byte *block, const byte *nonce, const byte *in, si
  * @param aad Additional authenticated data
  * @param aad_len Additional authenticated data length
  * @param tag Output tag
- * @param tag_len Desired length of tag
+ * @param tag_len Output tag desired length
  * @param in Plain text
  * @param out Cipher txt
  * @param len Text length
@@ -173,7 +173,7 @@ inline bool ccm_encrypt(
  * @param aad Additional authenticated data
  * @param aad_len Additional authenticated data length
  * @param tag Input tag
- * @param tag_len Tag length
+ * @param tag_len Input tag length
  * @param in Cipher text
  * @param out Plain txt
  * @param len Text length

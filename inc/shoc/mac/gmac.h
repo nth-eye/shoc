@@ -7,7 +7,7 @@ namespace shoc {
 
 /**
  * @brief Authentication-only variant of the GCM. All pointers MUST be 
- * valid when relevant lenth is not 0. Tag length MUST be {4, 8, 12, 13, 14, 15, 16}:
+ * valid when relevant length is not 0. Tag length MUST be {4, 8, 12, 13, 14, 15, 16}:
  * https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-38d.pdf
  * 
  * @tparam E Block cipher
