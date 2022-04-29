@@ -12,7 +12,7 @@ namespace shoc {
  * @param y Second 128-bit vector multiplier
  * @param z Output 128-bit vector
  */
-constexpr void gmul(const byte *x, const byte *y, byte *z)
+inline void gmul(const byte *x, const byte *y, byte *z)
 {
     byte v[16];
 
@@ -34,7 +34,7 @@ constexpr void gmul(const byte *x, const byte *y, byte *z)
     }
 }
 
-constexpr void ghash(const byte *h, const byte *x, size_t x_len, byte *y)
+inline void ghash(const byte *h, const byte *x, size_t x_len, byte *y)
 {
     byte t[16];
     auto blocks = x_len >> 4;
@@ -55,7 +55,7 @@ constexpr void ghash(const byte *h, const byte *x, size_t x_len, byte *y)
     }
 }
 
-constexpr void gcm_ghash(
+inline void gcm_ghash(
     const byte *h, 
     const byte *aad, size_t aad_len, 
     const byte *txt, size_t txt_len,
