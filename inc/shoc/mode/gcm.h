@@ -91,10 +91,30 @@ inline void gcm_init(const byte *iv, size_t iv_len, byte *h, byte *j0, E &ciph)
         copy(j0, iv, 12);
         j0[15] = 0x01;
     } else {
+
+        // NOTE: I'm pretty sure the GCM paper has error on Page 15, Algorithm 4: GCM-AE, Step 2:
+        // 
+        // "Otherwise, the IV is padded with the minimum number of '0' bits, possibly none, so 
+        // that the length of the resulting string is a multiple of 128 bits (the block size);
+        // this string in turn is appended with 64 additional '0' bits, followed by the 64-bit 
+        // representation of the length of the IV"
+        // 
+        // https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-38d.pdf
+        //
+        // So, first padding with '0' till (N*128)-bits before 64-bit ['0'] and [iv_len] blocks 
+        // is done in code commented below, but it gives incorrect results with test vectors.
+
+        // byte pad[16] = {};
+        // auto pad_len = 16 - (iv_len & 0xf);
+        // ghash(h, iv, iv_len, j0);
+        // ghash(h, pad, pad_len, j0);
+        // putbe(uint64_t(iv_len * 8), pad + 8);
+        // ghash(h, pad, 16, j0);
+
         byte pad[16] = {};
-        auto pad_len = 16 - (iv_len & 0xf);
+        putbe(uint64_t(iv_len * 8), pad + 8);
         ghash(h, iv, iv_len, j0);
-        ghash(h, pad, pad_len, j0);
+        ghash(h, pad, 16, j0);
     }
 }
 
