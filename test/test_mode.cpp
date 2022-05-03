@@ -152,12 +152,13 @@ TEST(Gcm, EncryptDecryptAes128_1)
 
     ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, tag, sizeof(exp_tag), nullptr, nullptr, 0));
     compare(tag, exp_tag, sizeof(exp_tag));
-    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, tag, sizeof(exp_tag), nullptr, nullptr, 0));
+    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, exp_tag, sizeof(exp_tag), nullptr, nullptr, 0));
 }
 
 TEST(Gcm, EncryptDecryptAes128_2)
 {
-    byte out[16];
+    byte enc[16];
+    byte dec[16];
     byte tag[16];
 
     const byte key[]        = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -166,16 +167,17 @@ TEST(Gcm, EncryptDecryptAes128_2)
     const byte exp_out[]    = { 0x03, 0x88, 0xda, 0xce, 0x60, 0xb6, 0xa3, 0x92, 0xf3, 0x28, 0xc2, 0xb9, 0x71, 0xb2, 0xfe, 0x78 };
     const byte exp_tag[]    = { 0xab, 0x6e, 0x47, 0xd4, 0x2c, 0xec, 0x13, 0xbd, 0xf5, 0x3a, 0x67, 0xb2, 0x12, 0x57, 0xbd, 0xdf };
 
-    ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, tag, sizeof(exp_tag), in, out, sizeof(in)));
-    compare(out, exp_out, sizeof(exp_out));
+    ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, tag, sizeof(exp_tag), in, enc, sizeof(in)));
+    compare(enc, exp_out, sizeof(exp_out));
     compare(tag, exp_tag, sizeof(exp_tag));
-    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, tag, sizeof(exp_tag), out, out, sizeof(in)));
-    compare(out, in, sizeof(in));
+    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, tag, sizeof(exp_tag), enc, dec, sizeof(in)));
+    compare(dec, in, sizeof(in));
 }
 
 TEST(Gcm, EncryptDecryptAes128_3)
 {
-    byte out[64];
+    byte enc[64];
+    byte dec[64];
     byte tag[16];
 
     const byte key[]        = { 0xfe, 0xff, 0xe9, 0x92, 0x86, 0x65, 0x73, 0x1c, 0x6d, 0x6a, 0x8f, 0x94, 0x67, 0x30, 0x83, 0x08 };
@@ -190,16 +192,17 @@ TEST(Gcm, EncryptDecryptAes128_3)
                                 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
     const byte exp_tag[]    = { 0x4d, 0x5c, 0x2a, 0xf3, 0x27, 0xcd, 0x64, 0xa6, 0x2c, 0xf3, 0x5a, 0xbd, 0x2b, 0xa6, 0xfa, 0xb4 };
 
-    ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, tag, sizeof(exp_tag), in, out, sizeof(in)));
-    compare(out, exp_out, sizeof(exp_out));
+    ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, tag, sizeof(exp_tag), in, enc, sizeof(in)));
+    compare(enc, exp_out, sizeof(exp_out));
     compare(tag, exp_tag, sizeof(exp_tag));
-    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, tag, sizeof(exp_tag), out, out, sizeof(in)));
-    compare(out, in, sizeof(in));
+    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), nullptr, 0, tag, sizeof(exp_tag), enc, dec, sizeof(in)));
+    compare(dec, in, sizeof(in));
 }
 
 TEST(Gcm, EncryptDecryptAes128_4)
 {
-    byte out[60];
+    byte enc[60];
+    byte dec[60];
     byte tag[16];
 
     const byte key[]        = { 0xfe, 0xff, 0xe9, 0x92, 0x86, 0x65, 0x73, 0x1c, 0x6d, 0x6a, 0x8f, 0x94, 0x67, 0x30, 0x83, 0x08 };
@@ -216,16 +219,17 @@ TEST(Gcm, EncryptDecryptAes128_4)
                                 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91 };
     const byte exp_tag[]    = { 0x5b, 0xc9, 0x4f, 0xbc, 0x32, 0x21, 0xa5, 0xdb, 0x94, 0xfa, 0xe9, 0x5a, 0xe7, 0x12, 0x1a, 0x47 };
 
-    ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), in, out, sizeof(in)));
-    compare(out, exp_out, sizeof(exp_out));
+    ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), in, enc, sizeof(in)));
+    compare(enc, exp_out, sizeof(exp_out));
     compare(tag, exp_tag, sizeof(exp_tag));
-    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), out, out, sizeof(in)));
-    compare(out, in, sizeof(in));
+    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), enc, dec, sizeof(in)));
+    compare(dec, in, sizeof(in));
 }
 
 TEST(Gcm, EncryptDecryptAes128_5)
 {
-    byte out[60];
+    byte enc[60];
+    byte dec[60];
     byte tag[16];
 
     const byte key[]        = { 0xfe, 0xff, 0xe9, 0x92, 0x86, 0x65, 0x73, 0x1c, 0x6d, 0x6a, 0x8f, 0x94, 0x67, 0x30, 0x83, 0x08 };
@@ -242,16 +246,17 @@ TEST(Gcm, EncryptDecryptAes128_5)
                                 0x49, 0x89, 0xb5, 0xe1, 0xeb, 0xac, 0x0f, 0x07, 0xc2, 0x3f, 0x45, 0x98 };
     const byte exp_tag[]    = { 0x36, 0x12, 0xd2, 0xe7, 0x9e, 0x3b, 0x07, 0x85, 0x56, 0x1b, 0xe1, 0x4a, 0xac, 0xa2, 0xfc, 0xcb };
 
-    ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), in, out, sizeof(in)));
-    compare(out, exp_out, sizeof(exp_out));
+    ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), in, enc, sizeof(in)));
+    compare(enc, exp_out, sizeof(exp_out));
     compare(tag, exp_tag, sizeof(exp_tag));
-    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), out, out, sizeof(in)));
-    compare(out, in, sizeof(in));
+    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), enc, dec, sizeof(in)));
+    compare(dec, in, sizeof(in));
 }
 
-TEST(Gcm, EncryptDecryptAes128_Special)
+TEST(Gcm, EncryptDecryptAes128_6)
 {
-    byte out[51];
+    byte enc[51];
+    byte dec[51];
     byte tag[14];
 
     const byte key[]        = { 0x8d, 0x10, 0x04, 0x4f, 0x01, 0x4f, 0xc2, 0x45, 0xf6, 0xac, 0xd4, 0x61, 0x11, 0xa4, 0x07, 0x46 };
@@ -274,9 +279,9 @@ TEST(Gcm, EncryptDecryptAes128_Special)
                                 0x0f, 0x8d, 0x66 };
     const byte exp_tag[]    = { 0xd8, 0xee, 0x9e, 0xc0, 0xff, 0xef, 0x3d, 0xcc, 0xb9, 0xdc, 0x90, 0xb0, 0x82, 0x6a };
 
-    ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), in, out, sizeof(in)));
-    compare(out, exp_out, sizeof(exp_out));
+    ASSERT_TRUE(gcm_encrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), in, enc, sizeof(in)));
+    compare(enc, exp_out, sizeof(exp_out));
     compare(tag, exp_tag, sizeof(exp_tag));
-    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), out, out, sizeof(in)));
-    compare(out, in, sizeof(in));
+    ASSERT_TRUE(gcm_decrypt<Aes>(key, iv, sizeof(iv), aad, sizeof(aad), tag, sizeof(exp_tag), enc, dec, sizeof(in)));
+    compare(dec, in, sizeof(in));
 }

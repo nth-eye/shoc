@@ -216,7 +216,7 @@ inline bool gcm_decrypt(
     byte t[16];
 
     gcm_init(iv, iv_len, h, j, ciph);           // 1. Init hash subkey and prepare J0
-    gcm_ghash(h, aad, aad_len, out, len, s);    // 2. Apply GHASH to [pad(aad) + pad(ciphertext) + 64-bit(aad_len * 8), 64-bit(len * 8))]
+    gcm_ghash(h, aad, aad_len, in, len, s);     // 2. Apply GHASH to [pad(aad) + pad(ciphertext) + 64-bit(aad_len * 8), 64-bit(len * 8))]
     gcm_gctr(j, in, out, len, ciph);            // 3. Increment J0 and pass to GCTR
     ctrf(j, s, t, sizeof(t), ciph);             // 4. Generate full tag
 
