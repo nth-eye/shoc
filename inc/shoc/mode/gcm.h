@@ -51,7 +51,7 @@ inline void ghash(const byte *h, const byte *x, size_t x_len, byte *y)
         zero(t + remain, 16 - remain);
         xorb(y, t);
         gmul(y, h, t);
-		copy(y, t, 16);
+        copy(y, t, 16);
     }
 }
 
