@@ -125,8 +125,9 @@ TEST(Ctr, EncryptDecryptAes128)
 
 TEST(Ccm, EncryptDecryptAes128)
 {
-    byte out[64];
-    byte tag[64];
+    byte enc[23];
+    byte dec[23];
+    byte tag[8];
 
     const byte key[]     = { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF };
     const byte nonce[]   = { 0x00, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5 };
@@ -135,11 +136,11 @@ TEST(Ccm, EncryptDecryptAes128)
     const byte exp_out[] = { 0x58, 0x8C, 0x97, 0x9A, 0x61, 0xC6, 0x63, 0xD2, 0xF0, 0x66, 0xD0, 0xC2, 0xC0, 0xF9, 0x89, 0x80, 0x6D, 0x5F, 0x6B, 0x61, 0xDA, 0xC3, 0x84 };
     const byte exp_tag[] = { 0x17, 0xE8, 0xD1, 0x2C, 0xFD, 0xF9, 0x26, 0xE0 };
 
-    ASSERT_TRUE(ccm_encrypt<Aes>(key, nonce, aad, sizeof(aad), tag, 8, in, out, sizeof(in)));
-    compare(out, exp_out, sizeof(exp_out));
+    ASSERT_TRUE(ccm_encrypt<Aes>(key, nonce, aad, sizeof(aad), tag, sizeof(exp_tag), in, enc, sizeof(in)));
+    compare(enc, exp_out, sizeof(exp_out));
     compare(tag, exp_tag, sizeof(exp_tag));
-    ASSERT_TRUE(ccm_decrypt<Aes>(key, nonce, aad, sizeof(aad), tag, 8, out, out, sizeof(in)));
-    compare(out, in, sizeof(in));
+    ASSERT_TRUE(ccm_encrypt<Aes>(key, nonce, aad, sizeof(aad), tag, sizeof(exp_tag), enc, dec, sizeof(in)));
+    compare(dec, in, sizeof(in));
 }
 
 TEST(Gcm, EncryptDecryptAes128_1)

@@ -1,7 +1,7 @@
 #ifndef SHOC_HASH_GIMLI_H
 #define SHOC_HASH_GIMLI_H
 
-#include "shoc/_util.h"
+#include "shoc/util.h"
 
 namespace shoc {
 

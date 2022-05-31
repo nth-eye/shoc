@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <ctime>
 #include "shoc/xoodoo.h"
-#include "shoc/_log.h"
+#include "shoc/log.h"
 
 template<size_t N = 1, class Fn, class ...Args>
 clock_t measure_time(Fn &&fn, Args &&...args)

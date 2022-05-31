@@ -203,7 +203,7 @@ inline bool ccm_decrypt(
     for (size_t i = 0; i < tag_len; ++i)
         mac[i] = block[i] ^ tag[i];
 
-    ccm_auth<E, L>(ciph, block, nonce, in, len, aad, aad_len, tag_len);
+    ccm_auth<E, L>(ciph, block, nonce, out, len, aad, aad_len, tag_len);
 
     if (memcmp(mac, block, tag_len)) {
         zero(out, len);

@@ -1,7 +1,7 @@
 #ifndef SHOC_MODE_CFB_H
 #define SHOC_MODE_CFB_H
 
-#include "shoc/_util.h"
+#include "shoc/util.h"
 
 namespace shoc {
 

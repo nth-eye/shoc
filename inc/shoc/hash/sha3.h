@@ -1,7 +1,7 @@
 #ifndef SHOC_HASH_SHA3_H
 #define SHOC_HASH_SHA3_H
 
-#include "shoc/_util.h"
+#include "shoc/util.h"
 
 namespace shoc {
 

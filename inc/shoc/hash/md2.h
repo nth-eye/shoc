@@ -1,7 +1,7 @@
 #ifndef SHOC_HASH_MD2_H
 #define SHOC_HASH_MD2_H
 
-#include "shoc/_util.h"
+#include "shoc/util.h"
 
 namespace shoc {
 
@@ -34,7 +34,7 @@ inline void Md2::init()
 
 inline void Md2::update(const void *in, size_t len)
 {
-    assert(in);
+    assert(in || !len);
 
     auto p = static_cast<const byte*>(in);
 

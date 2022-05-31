@@ -1,7 +1,7 @@
 #ifndef SHOC_XOODOO_H
 #define SHOC_XOODOO_H
 
-#include "shoc/_util.h"
+#include "shoc/util.h"
 
 namespace shoc {
 

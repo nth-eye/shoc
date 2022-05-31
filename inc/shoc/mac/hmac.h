@@ -1,7 +1,7 @@
 #ifndef SHOC_MAC_HMAC_H
 #define SHOC_MAC_HMAC_H
 
-#include "shoc/_util.h"
+#include "shoc/util.h"
 
 namespace shoc {
 

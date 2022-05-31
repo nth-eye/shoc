@@ -1,7 +1,7 @@
 #ifndef SHOC_HASH_SHA1_H
 #define SHOC_HASH_SHA1_H
 
-#include "shoc/_util.h"
+#include "shoc/util.h"
 
 namespace shoc {
 
@@ -42,7 +42,7 @@ inline void Sha1::init()
 
 inline void Sha1::update(const void *in, size_t len)
 {
-    assert(in);
+    assert(in || !len);
 
     auto p = static_cast<const byte*>(in);
 

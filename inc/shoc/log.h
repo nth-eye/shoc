@@ -1,7 +1,7 @@
 #ifndef SHOC_LOG_H
 #define SHOC_LOG_H
 
-#include "shoc/_util.h"
+#include "shoc/util.h"
 #include <cstdio>
 
 namespace shoc {

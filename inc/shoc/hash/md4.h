@@ -1,7 +1,7 @@
 #ifndef SHOC_HASH_MD4_H
 #define SHOC_HASH_MD4_H
 
-#include "shoc/_util.h"
+#include "shoc/util.h"
 
 namespace shoc {
 
@@ -41,7 +41,7 @@ inline void Md4::init()
 
 inline void Md4::update(const void *in, size_t len)
 {
-    assert(in);
+    assert(in || !len);
 
     auto p = static_cast<const byte*>(in);
 

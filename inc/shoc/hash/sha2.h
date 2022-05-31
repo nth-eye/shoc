@@ -1,7 +1,7 @@
 #ifndef SHOC_HASH_SHA2_H
 #define SHOC_HASH_SHA2_H
 
-#include "shoc/_util.h"
+#include "shoc/util.h"
 
 namespace shoc {
 
@@ -85,7 +85,7 @@ void Sha2<T>::init()
 template<Sha2Type T>
 void Sha2<T>::update(const void *in, size_t len)
 {
-    assert(in);
+    assert(in || !len);
 
     auto p = static_cast<const byte*>(in);
 
