@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(shoc VERSION 0.1.0)
 
-add_library(shoclib INTERFACE)
-target_include_directories(shoclib INTERFACE inc)
-target_compile_features(shoclib INTERFACE cxx_std_20)
-target_compile_options(shoclib INTERFACE "-Wall" "-Wextra" "-Wpedantic")
+add_library(libshoc INTERFACE)
+target_include_directories(libshoc INTERFACE inc)
+target_compile_features(libshoc INTERFACE cxx_std_20)
+target_compile_options(libshoc INTERFACE "-Wall" "-Wextra" "-Wpedantic")
 
 add_executable(shoc main.cpp)
-target_link_libraries(shoc PRIVATE shoclib)
+target_link_libraries(shoc PRIVATE libshoc)
 
 add_executable(shoctest 
     test/test_aes.cpp
@@ -16,7 +16,7 @@ add_executable(shoctest
     test/test_hmac.cpp
     test/test_hotp.cpp
     test/test_mode.cpp)
-target_link_libraries(shoctest PRIVATE gtest_main shoclib)
+target_link_libraries(shoctest PRIVATE gtest_main libshoc)
 
 enable_testing()
 include(FetchContent)
