@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include "shoc/hash/md2.h"
 #include "shoc/hash/md4.h"
-#include "shoc/hash/md5.h"
+// #include "shoc/hash/md5.h"
 #include "shoc/hash/sha1.h"
 #include "shoc/hash/sha2.h"
-#include "shoc/hash/sha3.h"
+// #include "shoc/hash/sha3.h"
 #include "shoc/hash/gimli.h"
 
 using namespace shoc;
