@@ -5,34 +5,29 @@
 
 namespace shoc {
 
-struct Md2 {
-
-    static constexpr size_t SIZE = 16;
-
+struct Md2 : Eater<Md2> {
+    static constexpr size_t SIZE        = 16;
+    static constexpr size_t STATE_SIZE  = 16;   // In bytes
+    static constexpr size_t BLOCK_SIZE  = 16;   // In bytes
+public:
     void init();
-    void update(const void *in, size_t len);
-    void final(byte out[SIZE]);
-    void operator()(const void *in, size_t len, byte out[SIZE]);
+    void feed(const void *in, size_t len);
+    void stop(byte *out);
 private:
     void step();
-
+private:
     byte checksum[16];
-    byte state[16];
-    byte block[16];
+    byte state[STATE_SIZE];
+    byte block[BLOCK_SIZE];
     byte block_idx;
 };
-
-inline void Md2::operator()(const void *in, size_t len, byte out[SIZE])
-{
-    init(), update(in, len), final(out);
-}
 
 inline void Md2::init()
 {
     fill(this, 0, sizeof(*this));
 }
 
-inline void Md2::update(const void *in, size_t len)
+inline void Md2::feed(const void *in, size_t len)
 {
     assert(in || !len);
 
@@ -45,20 +40,20 @@ inline void Md2::update(const void *in, size_t len)
     }
 }
 
-inline void Md2::final(byte out[SIZE])
+inline void Md2::stop(byte *out)
 {
     assert(out);
     auto padding = sizeof(block) - block_idx;
     fill(block + block_idx, padding, padding);
     step();
-    update(checksum, sizeof(checksum));
+    feed(checksum, sizeof(checksum));
     copy(out, state, sizeof(state));
     zero(this, sizeof(*this));
 }
 
 inline void Md2::step()
 {
-    constexpr byte table[] = { 
+    static constexpr byte table[] = { 
         0x29, 0x2e, 0x43, 0xc9, 0xa2, 0xd8, 0x7c, 0x01, 0x3d, 0x36, 0x54, 0xa1, 0xec, 0xf0, 0x06, 0x13, 
         0x62, 0xa7, 0x05, 0xf3, 0xc0, 0xc7, 0x73, 0x8c, 0x98, 0x93, 0x2b, 0xd9, 0xbc, 0x4c, 0x82, 0xca, 
         0x1e, 0x9b, 0x57, 0x3c, 0xfd, 0xd4, 0xe0, 0x16, 0x67, 0x42, 0x6f, 0x18, 0x8a, 0x17, 0xe5, 0x12, 
@@ -87,17 +82,16 @@ inline void Md2::step()
 
     byte t = 0;
     for (int i = 0; i < 18; ++i) {
-        for (int j = 0; j < 48; ++j)
-            t = buf[j] ^= table[t];
+        for (auto &j : buf)
+            t = j ^= table[t];
         t += i;
     }
-
-    copy(state, buf, sizeof(state));
 
     t = checksum[15];
     for (int i = 0; i < 16; ++i)
         t = checksum[i] ^= table[block[i] ^ t];
 
+    copy(state, buf, sizeof(state));
     zero(buf, sizeof(buf));
 
     block_idx = 0;

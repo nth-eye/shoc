@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <string_view>
 #include "shoc/mac/hmac.h"
 #include "shoc/hash/sha1.h"
 #include "shoc/hash/sha2.h"
@@ -24,7 +23,7 @@ void hmac_check(const Data (&test)[N])
             it.msg.data(), it.msg.size(), 
             it.key.data(), it.key.size(), 
             bin);
-        bin_to_str(bin, sizeof(bin), str, sizeof(str));
+        utl::bin_to_str(bin, sizeof(bin), str, sizeof(str));
         EXPECT_STREQ(it.exp.data(), str);
     }
 }

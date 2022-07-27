@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <string_view>
 #include "shoc/hash/md2.h"
 #include "shoc/hash/md4.h"
 #include "shoc/hash/md5.h"
@@ -16,7 +15,7 @@ struct Data {
 };
 
 template<class Hash, size_t N>
-static void hash_check(const Data (&test)[N])
+static void check(const Data (&test)[N])
 {
     Hash hash;
     byte bin[Hash::SIZE] = {};
@@ -24,7 +23,7 @@ static void hash_check(const Data (&test)[N])
 
     for (auto it : test) {
         hash(it.msg.data(), it.msg.size(), bin);
-        bin_to_str(bin, sizeof(bin), str, sizeof(str));
+        utl::bin_to_str(bin, sizeof(bin), str, sizeof(str));
         EXPECT_STREQ(it.exp.data(), str);
     }
 }
@@ -47,7 +46,7 @@ TEST(Hash, Md2)
         { "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
             "d5976f79d83d3a0dc9806c3c66f3efd8" },
     };
-    hash_check<Md2>(test);
+    check<Md2>(test);
 }
 
 TEST(Hash, Md4) 
@@ -68,7 +67,7 @@ TEST(Hash, Md4)
         { "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
             "e33b4ddc9c38f2199c3e7b164fcc0536" },
     };
-    hash_check<Md4>(test);
+    check<Md4>(test);
 }
 
 // TEST(Hash, Md5) 
@@ -89,7 +88,7 @@ TEST(Hash, Md4)
 //         { "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
 //             "e33b4ddc9c38f2199c3e7b164fcc0536" },
 //     };
-//     hash_check<Md5>(test);
+//     check<Md5>(test);
 // }
 
 TEST(Hash, Sha1)
@@ -108,7 +107,7 @@ TEST(Hash, Sha1)
         { "The quick brown fox jumps over the lazy cog", 
             "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3" },
     };
-    hash_check<Sha1>(test);
+    check<Sha1>(test);
 }
 
 TEST(Hash, Sha224)
@@ -123,7 +122,7 @@ TEST(Hash, Sha224)
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
             "c97ca9a559850ce97a04a96def6d99a9e0e0e2ab14e6b8df265fc0b3" },
     };
-    hash_check<Sha2<SHA_224>>(test);
+    check<Sha2<SHA_224>>(test);
 }
 
 TEST(Hash, Sha256)
@@ -138,7 +137,7 @@ TEST(Hash, Sha256)
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
             "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1" },
     };
-    hash_check<Sha2<SHA_256>>(test);
+    check<Sha2<SHA_256>>(test);
 }
 
 TEST(Hash, Sha384)
@@ -153,7 +152,7 @@ TEST(Hash, Sha384)
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
             "09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039" },
     };
-    hash_check<Sha2<SHA_384>>(test);
+    check<Sha2<SHA_384>>(test);
 }
 
 TEST(Hash, Sha512)
@@ -168,7 +167,7 @@ TEST(Hash, Sha512)
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
             "8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909" },
     };
-    hash_check<Sha2<SHA_512>>(test);
+    check<Sha2<SHA_512>>(test);
 }
 
 TEST(Hash, Sha512_224)
@@ -183,7 +182,7 @@ TEST(Hash, Sha512_224)
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
             "23fec5bb94d60b23308192640b0c453335d664734fe40e7268674af9" },
     };
-    hash_check<Sha2<SHA_512_224>>(test);
+    check<Sha2<SHA_512_224>>(test);
 }
 
 TEST(Hash, Sha512_256)
@@ -198,7 +197,7 @@ TEST(Hash, Sha512_256)
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
             "3928e184fb8690f840da3988121d31be65cb9d3ef83ee6146feac861e19b563a" },
     };
-    hash_check<Sha2<SHA_512_256>>(test);
+    check<Sha2<SHA_512_256>>(test);
 }
 
 TEST(Hash, Gimli)
@@ -215,5 +214,5 @@ TEST(Hash, Gimli)
         { "",
             "b0634b2c0b082aedc5c0a2fe4ee3adcfc989ec05de6f00addb04b3aaac271f67" },
     };
-    hash_check<Gimli>(test);
+    check<Gimli>(test);
 }

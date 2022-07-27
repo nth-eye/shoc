@@ -12,8 +12,8 @@ namespace shoc {
 //     static constexpr size_t SIZE = 16;
 
 //     void init();
-//     void update(const void *in, size_t len);
-//     void final(byte out[SIZE]);
+//     void feed(const void *in, size_t len);
+//     void stop(byte out[SIZE]);
 //     void operator()(const void *in, size_t len, byte out[SIZE]);
 // private:
 //     void pad();
@@ -40,7 +40,7 @@ namespace shoc {
 //     block_idx = length_high = length_low = 0;
 // }
 
-// void Md5::update(const void *in, size_t len)
+// void Md5::feed(const void *in, size_t len)
 // {
 //     assert(in);
 
@@ -57,7 +57,7 @@ namespace shoc {
 //     }
 // }
 
-// void Md5::final(byte out[SIZE])
+// void Md5::stop(byte out[SIZE])
 // {
 
 // }

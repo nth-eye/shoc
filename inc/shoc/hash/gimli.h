@@ -5,22 +5,22 @@
 
 namespace shoc {
 
-struct Gimli {
-
-    using word = uint32_t;
-
-    static constexpr size_t SIZE = 32;
-
+struct Gimli : Eater<Gimli> {
+    static constexpr size_t SIZE        = 32;
+    static constexpr size_t STATE_SIZE  = 48;   // In bytes
+    static constexpr size_t BLOCK_SIZE  = 16;   // In bytes
+public:
     void init();
-    void update(const void *in, size_t len);
-    void final(byte out[SIZE]);
-    void operator()(const void *in, size_t len, byte out[SIZE]);
+    void feed(const void *in, size_t len);
+    void stop(byte *out);
 private:
     void step();
-
+private:
+    using word = uint32_t;
+private:
     union {
         word state32[3][4];
-        byte state8[48];
+        byte state8[STATE_SIZE];
     };
     byte idx;
 };
@@ -31,7 +31,7 @@ inline void Gimli::init()
     idx = 0;
 }
 
-inline void Gimli::update(const void *in, size_t len)
+inline void Gimli::feed(const void *in, size_t len)
 {
     assert(in || !len);
 
@@ -39,14 +39,14 @@ inline void Gimli::update(const void *in, size_t len)
 
     while (len--) {
         state8[idx++] ^= *p++;
-        if (idx == 16) {
+        if (idx == BLOCK_SIZE) {
             idx = 0;
             step();
         }
     }
 }
 
-inline void Gimli::final(byte out[SIZE])
+inline void Gimli::stop(byte *out)
 {
     assert(out);
 
@@ -57,11 +57,6 @@ inline void Gimli::final(byte out[SIZE])
     step();
     copy(out + 16, state8, 16);
     zero(this, sizeof(*this));
-}
-
-inline void Gimli::operator()(const void *in, size_t len, byte out[SIZE])
-{
-    init(), update(in, len), final(out);
 }
 
 inline void Gimli::step()

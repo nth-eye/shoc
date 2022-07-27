@@ -22,8 +22,8 @@ bool hkdf(
         salt_len = sizeof(default_salt);
     }
     hmac.init(salt, salt_len);
-    hmac.update(ikm, ikm_len);
-    hmac.final(prk);
+    hmac.feed(ikm, ikm_len);
+    hmac.stop(prk);
 
     size_t offset = 0;
     size_t iterations = (okm_len + H::SIZE - 1) / H::SIZE;
@@ -34,10 +34,10 @@ bool hkdf(
         
         hmac.init(prk, sizeof(prk));
         if (i > 1)
-            hmac.update(t, sizeof(t));
-        hmac.update(info, info_len);
-        hmac.update(&i, 1);
-        hmac.final(t);
+            hmac.feed(t, sizeof(t));
+        hmac.feed(info, info_len);
+        hmac.feed(&i, 1);
+        hmac.stop(t);
 
         if (i == iterations)
             copy(&okm[offset], t, okm_len - offset);

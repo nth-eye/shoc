@@ -16,8 +16,8 @@ void hmac(const void *msg, size_t msg_len, const void *key, size_t key_len, byte
     if (key_len > H::BLOCK_SIZE) {
 
         hash.init();
-        hash.update(key, key_len);
-        hash.final(tk);
+        hash.feed(key, key_len);
+        hash.stop(tk);
 
         key = tk;
         key_len = H::SIZE;
@@ -32,21 +32,21 @@ void hmac(const void *msg, size_t msg_len, const void *key, size_t key_len, byte
     }
 
     hash.init();
-    hash.update(k_ipad, H::BLOCK_SIZE);
-    hash.update(msg, msg_len);
-    hash.final(digest);
+    hash.feed(k_ipad, H::BLOCK_SIZE);
+    hash.feed(msg, msg_len);
+    hash.stop(digest);
 
     hash.init();
-    hash.update(k_opad, H::BLOCK_SIZE);
-    hash.update(digest, H::SIZE);
-    hash.final(digest);
+    hash.feed(k_opad, H::BLOCK_SIZE);
+    hash.feed(digest, H::SIZE);
+    hash.stop(digest);
 }
 
 template<class H>
 struct Hmac {
     void init(const void *key, size_t key_len);
-    void update(const void *msg, size_t msg_len);
-    void final(byte *out);
+    void feed(const void *msg, size_t msg_len);
+    void stop(byte *out);
     void operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, byte *out);
 private:
     H hash;
@@ -60,8 +60,8 @@ void Hmac<H>::init(const void *key, size_t key_len)
     if (key_len > H::BLOCK_SIZE) {
 
         hash.init();
-        hash.update(key, key_len);
-        hash.final(tk);
+        hash.feed(key, key_len);
+        hash.stop(tk);
 
         key = tk;
         key_len = H::SIZE;
@@ -73,7 +73,7 @@ void Hmac<H>::init(const void *key, size_t key_len)
         it ^= 0x36;
 
     hash.init();
-    hash.update(k_pad, sizeof(k_pad));
+    hash.feed(k_pad, sizeof(k_pad));
 
     fill(k_pad, 0, sizeof(k_pad));
     copy(k_pad, key, key_len);
@@ -82,25 +82,25 @@ void Hmac<H>::init(const void *key, size_t key_len)
 }
 
 template<class H>
-void Hmac<H>::update(const void *msg, size_t msg_len)
+void Hmac<H>::feed(const void *msg, size_t msg_len)
 {
-    hash.update(msg, msg_len);
+    hash.feed(msg, msg_len);
 }
 
 template<class H>
-void Hmac<H>::final(byte *out)
+void Hmac<H>::stop(byte *out)
 {
-    hash.final(out);
+    hash.stop(out);
     hash.init();
-    hash.update(k_pad, sizeof(k_pad));
-    hash.update(out, H::SIZE);
-    hash.final(out);
+    hash.feed(k_pad, sizeof(k_pad));
+    hash.feed(out, H::SIZE);
+    hash.stop(out);
 }
 
 template<class H>
 void Hmac<H>::operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, byte *out)
 {
-    init(key, key_len), update(msg, msg_len), final(out);
+    init(key, key_len), feed(msg, msg_len), stop(out);
 }
 
 }

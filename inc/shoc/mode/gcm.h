@@ -6,6 +6,26 @@
 namespace shoc {
 
 /**
+ * @brief Shift bits right in array of integer elements from most significant bit
+ * and considering 0-th byte as the left most.
+ * uint16_t example: 0b10000000'11100001 ==> 0b11000000'01110000. 
+ * 
+ * @tparam T Integer type
+ * @tparam L Length of array
+ * @param x Array of integers, nullptr not acceptable!
+ * @param len Number of elements
+ */
+template<class T, size_t L>
+constexpr void gcm_shift_right_reflected(T (&x)[L])
+{
+    for (int i = L - 1; i > 0; --i) {
+        x[i] >>= 1;
+        x[i] |= (x[i - 1] & 1) << (sizeof(T) * 8 - 1); 
+    }
+    x[0] >>= 1;
+}
+
+/**
  * @brief Multiplication in Galois field 2^128. 
  * 
  * @param x First 128-bit vector multiplicand
@@ -21,14 +41,14 @@ inline void gmul(const byte *x, const byte *y, byte *z)
 
     for (int i = 0; i < 16; ++i) {
         for (int j = 7; j >= 0; --j) {
-            if (get_bit(x[i], j)) {
+            if (utl::get_bit(x[i], j)) {
                 xorb(z, v);
             }
-            if (get_bit(v[15], 0)) {
-                shift_right_reflected(v);
+            if (utl::get_bit(v[15], 0)) {
+                gcm_shift_right_reflected(v);
                 v[0] ^= 0xe1;
             } else {
-                shift_right_reflected(v);
+                gcm_shift_right_reflected(v);
             }
         }
     }

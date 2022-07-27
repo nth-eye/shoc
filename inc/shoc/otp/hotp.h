@@ -26,7 +26,7 @@ uint32_t hotp(const void *key, size_t key_len, uint64_t count, int mod)
             (digest[offset + 2] & 0xff) <<  8 |
             (digest[offset + 3] & 0xff);
 
-    return bin_code % ipow(10, mod);
+    return bin_code % utl::ipow(10, mod);
 }
 
 }

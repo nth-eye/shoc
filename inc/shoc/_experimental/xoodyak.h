@@ -12,8 +12,8 @@ struct Xoodyak {
     static constexpr size_t SIZE = 32;
 
     void init();
-    void update(const void *in, size_t len);
-    void final(byte *out, size_t len = SIZE);
+    void feed(const void *in, size_t len);
+    void stop(byte *out, size_t len = SIZE);
     void operator()(const void *in, size_t len, byte *out, size_t out_len = SIZE);
 private:
 

@@ -5,26 +5,23 @@
 
 namespace shoc {
 
-struct Sha1 {
-
-    using word = uint32_t;
-
+struct Sha1 : Eater<Sha1> {
     static constexpr size_t SIZE        = 20;
     static constexpr size_t STATE_SIZE  = 5;    // In words
     static constexpr size_t BLOCK_SIZE  = 64;   // In bytes
-    static constexpr size_t PAD_START   = BLOCK_SIZE - 8;
-
+public:
     void init();
-    void update(const void *in, size_t len);
-    void final(byte out[SIZE]);
-    void operator()(const void *in, size_t len, byte out[SIZE]);
+    void feed(const void *in, size_t len);
+    void stop(byte *out);
 private:
     void pad();
     void step();
-
-    word state[STATE_SIZE];
+private:
+    using word = uint32_t;
+private:
     word length_low;
     word length_high;
+    word state[STATE_SIZE];
     byte block[BLOCK_SIZE];
     byte block_idx;
 };
@@ -40,7 +37,7 @@ inline void Sha1::init()
     block_idx = length_high = length_low = 0;
 }
 
-inline void Sha1::update(const void *in, size_t len)
+inline void Sha1::feed(const void *in, size_t len)
 {
     assert(in || !len);
 
@@ -57,7 +54,7 @@ inline void Sha1::update(const void *in, size_t len)
     }
 }
 
-inline void Sha1::final(byte out[SIZE])
+inline void Sha1::stop(byte *out)
 {
     assert(out);
     pad();
@@ -71,20 +68,17 @@ inline void Sha1::final(byte out[SIZE])
     zero(this, sizeof(*this));
 }
 
-inline void Sha1::operator()(const void *in, size_t len, byte out[SIZE])
-{
-    init(), update(in, len), final(out);
-}
-
 inline void Sha1::pad()
 {
+    static constexpr size_t pad_start = BLOCK_SIZE - 8;
+
     block[block_idx++] = 0x80;
 
-    if (block_idx > PAD_START) {
+    if (block_idx > pad_start) {
         fill(block + block_idx, 0, BLOCK_SIZE - block_idx);
         step();
     }
-    fill(block + block_idx, 0, PAD_START - block_idx);
+    fill(block + block_idx, 0, pad_start - block_idx);
 
     for (size_t i = 0, j = 0; i < 4; ++i, j += 8) {
         block[BLOCK_SIZE - 1 - i] = length_low  >> j;
