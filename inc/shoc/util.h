@@ -106,6 +106,39 @@ constexpr void xorb(byte *x, const byte *y, size_t len = 16)
 }
 
 /**
+ * @brief Reflect bits of an integer.
+ * 
+ * @tparam T Integer type
+ * @param x Integer to reflect
+ * @return Result
+ */
+template<class T>
+constexpr T reflect_bits(T x)
+{
+    unsigned bits = sizeof(T) * 8; 
+    T mask = ~T(0);
+    while (bits >>= 1) {
+        mask ^= mask << bits;
+        x = (x & ~mask) >> bits | (x & mask) << bits;
+    }
+    return x;
+}
+
+/**
+ * @brief Put integer into array in little endian order.
+ * 
+ * @tparam T Integer type
+ * @param val Input integer
+ * @param out Output array
+ */
+template<class T>
+constexpr void putle(T val, byte *out)
+{
+    for (int i = 0; i < sizeof(T) * 8; i += 8)
+        *out++ = val >> i;
+}
+
+/**
  * @brief Put integer into array in big endian order.
  * 
  * @tparam T Integer type
