@@ -4,7 +4,7 @@
 #include "shoc/util.h"
 
 namespace shoc {
-namespace impl {
+namespace impl::crc {
 
 /**
  * @brief Calculate table for reciprocal CRC. Polynomial is
@@ -44,8 +44,8 @@ constexpr auto crc_table(T poly)
  * @tparam poly Polynomial
  */
 template<class T, T poly>
-struct CrcTable {
-    static constexpr auto table = crc_table(poly);
+struct Table {
+    static constexpr auto _ = crc_table(poly);
 };
 
 }
@@ -125,7 +125,7 @@ constexpr T crc_feed_fast(T val, const void *data, size_t size)
         byte b = *p++;
         if constexpr (!refin)
             b = bitswap(b);
-        val = impl::CrcTable<T, poly>::table[(val ^ b) & 0xff] ^ (val >> 8);
+        val = impl::crc::Table<T, poly>::_[(val ^ b) & 0xff] ^ (val >> 8);
     }
     return val;
 }
