@@ -134,7 +134,7 @@ constexpr T bitswap(T x)
 template<class T>
 constexpr T byteswap(T x)
 {
-    // TODO
+    return 0; // TODO
 }
 
 /**
