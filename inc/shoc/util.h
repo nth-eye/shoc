@@ -106,22 +106,35 @@ constexpr void xorb(byte *x, const byte *y, size_t len = 16)
 }
 
 /**
- * @brief Reflect bits of an integer.
+ * @brief Reverse bits in the given integer.
  * 
  * @tparam T Integer type
- * @param x Integer to reflect
+ * @param x Integer to reverse
  * @return Result
  */
 template<class T>
-constexpr T reflect_bits(T x)
+constexpr T bitswap(T x)
 {
-    unsigned bits = sizeof(T) * 8; 
-    T mask = ~T(0);
+    auto bits = sizeof(T) * 8; 
+    auto mask = ~T(0);
     while (bits >>= 1) {
         mask ^= mask << bits;
         x = (x & ~mask) >> bits | (x & mask) << bits;
     }
     return x;
+}
+
+/**
+ * @brief Reverse bytes in the given integer.
+ * 
+ * @tparam T Integer type
+ * @param x Integer to reverse
+ * @return Result
+ */
+template<class T>
+constexpr T byteswap(T x)
+{
+    // TODO
 }
 
 /**

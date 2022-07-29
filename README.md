@@ -10,4 +10,5 @@ Software-Header-Only-Crypto library in C++.
 - [ ] md5
 - [ ] sha3
 - [ ] xoodoo family algorithms
-- [ ] crc
+- [x] crc
+- [ ] byteswap
