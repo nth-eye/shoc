@@ -7,7 +7,7 @@ Software-Header-Only-Crypto library in C++.
 - [ ] readme
 - [ ] tests
 - [ ] unified api for consumers (md2, sha1, hmac, etc)
-- [ ] md5
+- [x] md5
 - [ ] sha3
 - [ ] xoodoo family algorithms
 - [x] crc
