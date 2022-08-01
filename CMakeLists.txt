@@ -19,5 +19,6 @@ add_executable(testshoc
     test/kdf/hkdf.cpp
     test/mac/hmac.cpp
     test/mode/mode.cpp
-    test/otp/hotp.cpp)
+    test/otp/hotp.cpp
+    test/elliptic.cpp)
 target_link_libraries(testshoc PRIVATE gtest_main libshoc)

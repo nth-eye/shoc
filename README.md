@@ -13,3 +13,4 @@ Software-Header-Only-Crypto library in C++.
 - [x] crc
 - [x] templated aes: 128, 192 and 256
 - [ ] byteswap
+- [ ] assertions
