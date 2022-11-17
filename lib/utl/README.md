@@ -1,0 +1,94 @@
+# utl
+
+Header-only utility library (`utl::` stands for __UTiL__) with common functions and containers, which nevertheless weren't present in C++20 standard library (previously C++17, so some functions are now just wrappers for `std::`). All functions that can be `constexpr` are. Not intended to become anything serious, but you may find some parts useful, for example `"float.h"` has IEE 754 half-precision floating point conversion functions. I use this library in many projects for embedded systems and in my other libraries, e.g. [zbor][1].
+
+## TODO
+
+- [ ] source
+    - [x] base
+    - [x] bit_vector
+    - [ ] bit_window
+    - [x] bit
+    - [x] float
+    - [ ] list
+    - [x] log
+    - [ ] makima
+        - [ ] comments
+        - [ ] ? simplification
+    - [ ] math
+        - [ ] galois field arithmetic
+    - [x] pool
+    - [ ] ring
+        - [x] iterator arithmetic
+        - [x] iterator access members
+        - ~~[ ] ? iterator operator<=>~~
+        - ~~[ ] ? safe circular constructors~~
+        - [ ] reverse iterators
+        - [x] constructor
+        - [x] destructor
+        - [x] operator=
+        - [x] assign
+        - [ ] emplace
+        - [ ] insert
+        - [ ] erase
+        - [ ] erase_begin
+        - [ ] erase_end
+        - [x] rotate
+        - [ ] resize
+        - [x] swap
+        - [x] put
+        - [x] get
+        - [x] access
+        - [x] iterators
+        - [x] capacity
+        - [x] clear
+        - [x] clear use array_range's
+        - [x] fix array_one
+        - [x] fix array_two
+        - [x] is_linear
+        - [x] linearize
+        - [x] emplace_back
+        - [x] push_back
+        - [x] pop_front
+        - [x] emplace_front
+        - [x] push_front
+        - [x] pop_back
+    - [x] storage
+    - [x] str
+    - [x] time
+    - [x] vector
+- [ ] tests
+    - [x] base
+    - [x] bit_vector
+    - [ ] bit_window
+    - [x] bit
+    - [ ] float
+    - [ ] list
+    - [ ] log
+    - [ ] makima
+    - [ ] math
+        - [ ] gf_mul
+        - [ ] haversine
+        - [x] gcs_distance
+        - [ ] inclination
+        - [ ] roll
+        - [ ] pitch
+    - [x] pool
+    - [ ] ring
+        - [x] ctors
+        - [x] dtor
+        - [x] operator=
+        - [x] assign
+        - [ ] resize
+    - [ ] storage
+    - [ ] str
+        - [ ] to_string
+        - [ ] join
+    - [ ] time
+    - [x] vector
+- [ ] readme
+    - [x] intro
+    - [ ] guide
+    - [ ] examples
+
+[1]: https://github.com/nth-eye/zbor
