@@ -23,7 +23,7 @@ void hmac_check(const Data (&test)[N])
             it.msg.data(), it.msg.size(), 
             it.key.data(), it.key.size(), 
             bin);
-        utl::bin_to_str(bin, sizeof(bin), str, sizeof(str));
+        utl::bin_to_cstr(bin, sizeof(bin), str, sizeof(str));
         EXPECT_STREQ(it.exp.data(), str);
     }
 }

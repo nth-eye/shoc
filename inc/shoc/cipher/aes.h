@@ -44,6 +44,10 @@ inline constexpr byte rsbox[256] = {
     0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
     0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d,
 };
+inline constexpr word rconst[11] = {
+    0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
+    0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000
+};
 
 constexpr auto subbyte(word x, int o)   { return sbox[(x >> o) & 0xff] << o; }
 constexpr auto subword(word x)          { return subbyte(x, 24) | subbyte(x, 16) | subbyte(x, 8) | subbyte(x, 0); }
@@ -60,14 +64,14 @@ constexpr auto gf_mul(byte x, byte y)
     }
     return r;
 }
-constexpr void mult_row_col(const byte *in, byte *out)
+constexpr void mult_row_col(const byte* in, byte* out)
 {
     out[0] = gf_x(in[0])        ^ gf_mul(in[1], 3)  ^ in[2]             ^ in[3];
     out[1] = in[0]              ^ gf_x(in[1])       ^ gf_mul(in[2], 3)  ^ in[3];
     out[2] = in[0]              ^ in[1]             ^ gf_x(in[2])       ^ gf_mul(in[3], 3);
     out[3] = gf_mul(in[0], 3)   ^ in[1]             ^ in[2]             ^ gf_x(in[3]);
 }
-constexpr auto inv_mult_row_col(const byte *in, byte *out)
+constexpr auto inv_mult_row_col(const byte* in, byte* out)
 {
     out[0] = gf_mul(in[0], 0xe) ^ gf_mul(in[1], 0xb) ^ gf_mul(in[2], 0xd) ^ gf_mul(in[3], 0x9);
     out[1] = gf_mul(in[0], 0x9) ^ gf_mul(in[1], 0xe) ^ gf_mul(in[2], 0xb) ^ gf_mul(in[3], 0xd);
@@ -75,114 +79,114 @@ constexpr auto inv_mult_row_col(const byte *in, byte *out)
     out[3] = gf_mul(in[0], 0xb) ^ gf_mul(in[1], 0xd) ^ gf_mul(in[2], 0x9) ^ gf_mul(in[3], 0xe);
 }
 
-enum Type {
-    T_128,
-    T_192,
-    T_256,
+enum type {
+    type_128,
+    type_192,
+    type_256,
 };
 
-template<Type T = T_128>
-struct Aes {
-    Aes() = default;
-    Aes(const byte *key) { init(key); }
-    ~Aes() { deinit(); }
+template<type T = type_128>
+class context {
+    static constexpr auto nk = 4 + 2 * T;
+    static constexpr auto nb = 4;
+    static constexpr auto nr = 10 + 2 * T;
 public:
-    void init(const byte *key);
-    void deinit();
-    void encrypt(const byte *in, byte *out);
-    void decrypt(const byte *in, byte *out);
+    static constexpr auto state_size    = nb * 4;
+    static constexpr auto block_size    = nb * 4;
+    static constexpr auto key_size      = nk * sizeof(word);
+public:
+    constexpr context() = default;
+    constexpr context(span_i<key_size> key) { init(key); }
+    constexpr ~context()                    { deinit(); }
+public:
+    constexpr void init(span_i<key_size> key);
+    constexpr void deinit();
+    constexpr void encrypt(span_i<block_size> in, span_o<block_size> out);
+    constexpr void decrypt(span_i<block_size> in, span_o<block_size> out);
 private:
-    void add_round_key(const word *key);
-    void sub_bytes();
-    void shift_rows();
-    void mix_columns();
-    void inv_sub_bytes();
-    void inv_shift_rows();
-    void inv_mix_columns();
+    constexpr void add_round_key(const word *key);
+    constexpr void sub_bytes();
+    constexpr void shift_rows();
+    constexpr void mix_columns();
+    constexpr void inv_sub_bytes();
+    constexpr void inv_shift_rows();
+    constexpr void inv_mix_columns();
 private:
-    static constexpr auto NK = 4 + 2 * T;
-    static constexpr auto NB = 4;
-    static constexpr auto NR = 10 + 2 * T;
-private:
-    byte state[NB * NK] = {};
-    word words[NB * (NR + 1)] = {};
+    byte state[nb * 4] = {};
+    word words[nb * (nr + 1)] = {};
 };
 
-template<Type T> 
-void Aes<T>::init(const byte *key)
+template<type T> 
+constexpr void context<T>::init(span_i<key_size> key)
 {
-    const word rconst[11] = {
-        0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
-        0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000
-    };
     size_t i = 0;
 
-    for (i = 0; i < NK; ++i) {
+    for (i = 0; i < nk; ++i) {
         words[i] = 
-            (key[NB * i + 0] << 24) | 
-            (key[NB * i + 1] << 16) |
-            (key[NB * i + 2] << 8 ) | 
-            (key[NB * i + 3]);
+            (key[nb * i + 0] << 24) | 
+            (key[nb * i + 1] << 16) |
+            (key[nb * i + 2] << 8 ) | 
+            (key[nb * i + 3]);
     }
-    for (; i < NB * (NR + 1); ++i) {
+    for (; i < nb * (nr + 1); ++i) {
         auto tmp = words[i - 1];
-        if (i % NK == 0) {
-            tmp = subword(rotword(tmp)) ^ rconst[i / NK];
-        } else if (NK > 6 && i % NK == 4) {
+        if (i % nk == 0) {
+            tmp = subword(rotword(tmp)) ^ rconst[i / nk];
+        } else if (nk > 6 && i % nk == 4) {
             tmp = subword(tmp);
         }
-        words[i] = words[i - NK] ^ tmp;
+        words[i] = words[i - nk] ^ tmp;
     }
 }
 
-template<Type T> 
-void Aes<T>::deinit()
+template<type T> 
+constexpr void context<T>::deinit()
 {
     zero(this, sizeof(*this));
 }
 
-template<Type T> 
-void Aes<T>::encrypt(const byte *in, byte *out)
+template<type T> 
+constexpr void context<T>::encrypt(span_i<block_size> in, span_o<block_size> out)
 {
-    copy(state, in, sizeof(state));
+    copy(state, in.data(), sizeof(state));
 
-    add_round_key(&words[NB * 0]);
-    for (int round = 1; round < NR; ++round) {
+    add_round_key(&words[nb * 0]);
+    for (int round = 1; round < nr; ++round) {
         sub_bytes();
         shift_rows();
         mix_columns();
-        add_round_key(&words[NB * round]);
+        add_round_key(&words[nb * round]);
     }
     sub_bytes();
     shift_rows();
-    add_round_key(&words[NB * NR]);
+    add_round_key(&words[nb * nr]);
     
-    copy(out, state, sizeof(state));
+    copy(out.data(), state, sizeof(state));
     zero(state, sizeof(state));
 }
 
-template<Type T> 
-void Aes<T>::decrypt(const byte *in, byte *out)
+template<type T> 
+constexpr void context<T>::decrypt(span_i<block_size> in, span_o<block_size> out)
 {
-    copy(state, in, sizeof(state));
+    copy(state, in.data(), sizeof(state));
 
-    add_round_key(&words[NB * NR]);
-    for (int round = NR - 1; round > 0; --round) {
+    add_round_key(&words[nb * nr]);
+    for (int round = nr - 1; round > 0; --round) {
         inv_shift_rows();
         inv_sub_bytes();
-        add_round_key(&words[NB * round]);
+        add_round_key(&words[nb * round]);
         inv_mix_columns();
     }
     inv_shift_rows();
     inv_sub_bytes();
-    add_round_key(&words[NB * 0]);
+    add_round_key(&words[nb * 0]);
     
-    copy(out, state, sizeof(state));
+    copy(out.data(), state, sizeof(state));
     zero(state, sizeof(state));
 }
 
-template<Type T> 
-void Aes<T>::add_round_key(const word *key)
+template<type T> 
+constexpr void context<T>::add_round_key(const word *key)
 {
     state[0]    ^= key[0] >> 24; 
     state[1]    ^= key[0] >> 16;
@@ -202,17 +206,17 @@ void Aes<T>::add_round_key(const word *key)
     state[15]   ^= key[3];
 }
 
-template<Type T> 
-void Aes<T>::sub_bytes()
+template<type T> 
+constexpr void context<T>::sub_bytes()
 {
     for (auto &s : state)
         s = sbox[s];
 }
 
-template<Type T> 
-void Aes<T>::shift_rows()
+template<type T> 
+constexpr void context<T>::shift_rows()
 {   
-    byte tmp[NB * NK] = {
+    byte tmp[nb * nk] = {
         state[0], state[5], state[10], state[15], 
         state[4], state[9], state[14], state[3],
         state[8], state[13], state[2], state[7],
@@ -221,30 +225,30 @@ void Aes<T>::shift_rows()
     copy(state, tmp, sizeof(state));
 }
 
-template<Type T> 
-void Aes<T>::mix_columns()
+template<type T> 
+constexpr void context<T>::mix_columns()
 {
-    byte tmp[NB * NK] = {};
+    byte tmp[nb * nk] = {};
 
-    mult_row_col(&state[NB * 0], &tmp[NB * 0]);
-    mult_row_col(&state[NB * 1], &tmp[NB * 1]);
-    mult_row_col(&state[NB * 2], &tmp[NB * 2]);
-    mult_row_col(&state[NB * 3], &tmp[NB * 3]);
+    mult_row_col(&state[nb * 0], &tmp[nb * 0]);
+    mult_row_col(&state[nb * 1], &tmp[nb * 1]);
+    mult_row_col(&state[nb * 2], &tmp[nb * 2]);
+    mult_row_col(&state[nb * 3], &tmp[nb * 3]);
 
     copy(state, tmp, sizeof(state));
 }
 
-template<Type T> 
-void Aes<T>::inv_sub_bytes()
+template<type T> 
+constexpr void context<T>::inv_sub_bytes()
 {
     for (auto &s : state)
         s = rsbox[s];
 }
 
-template<Type T> 
-void Aes<T>::inv_shift_rows()
+template<type T> 
+constexpr void context<T>::inv_shift_rows()
 {   
-    byte tmp[NB * NK] = {
+    byte tmp[nb * nk] = {
         state[0], state[13], state[10], state[7], 
         state[4], state[1], state[14], state[11],
         state[8], state[5], state[2], state[15],
@@ -253,24 +257,24 @@ void Aes<T>::inv_shift_rows()
     copy(state, tmp, sizeof(state));
 }
 
-template<Type T> 
-void Aes<T>::inv_mix_columns()
+template<type T> 
+constexpr void context<T>::inv_mix_columns()
 {
-    byte tmp[NB * NK] = {};
+    byte tmp[nb * nk] = {};
 
-    inv_mult_row_col(&state[NB * 0], &tmp[NB * 0]);
-    inv_mult_row_col(&state[NB * 1], &tmp[NB * 1]);
-    inv_mult_row_col(&state[NB * 2], &tmp[NB * 2]);
-    inv_mult_row_col(&state[NB * 3], &tmp[NB * 3]);
+    inv_mult_row_col(&state[nb * 0], &tmp[nb * 0]);
+    inv_mult_row_col(&state[nb * 1], &tmp[nb * 1]);
+    inv_mult_row_col(&state[nb * 2], &tmp[nb * 2]);
+    inv_mult_row_col(&state[nb * 3], &tmp[nb * 3]);
 
     copy(state, tmp, sizeof(state));
 }
 
 }
 
-using Aes128 = impl::aes::Aes<impl::aes::T_128>;
-using Aes192 = impl::aes::Aes<impl::aes::T_192>;
-using Aes256 = impl::aes::Aes<impl::aes::T_256>;
+using aes128 = impl::aes::context<impl::aes::type_128>;
+using aes192 = impl::aes::context<impl::aes::type_192>;
+using aes256 = impl::aes::context<impl::aes::type_256>;
 
 }
 

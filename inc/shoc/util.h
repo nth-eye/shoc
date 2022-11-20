@@ -1,15 +1,32 @@
 #ifndef SHOC_UTIL_H
 #define SHOC_UTIL_H
 
-#include <cassert>
-#include <bit>
-#include <algorithm>
 #include "utl/bit.h"
 #include "utl/str.h"
 
 namespace shoc {
 
+/**
+ * @brief Alias for underlying byte type.
+ * 
+ */
 using byte = uint8_t;
+
+/**
+ * @brief Input (const) span of bytes.
+ * 
+ * @tparam N Size
+ */
+template<size_t N = std::dynamic_extent>
+using span_i = std::span<const byte, N>;
+
+/**
+ * @brief Output (non-const) span of bytes.
+ * 
+ * @tparam N Size
+ */
+template<size_t N = std::dynamic_extent>
+using span_o = std::span<byte, N>;
 
 /**
  * @brief Wrapper for swap function.
@@ -61,11 +78,11 @@ constexpr bool little_endian()
  * 
  * @param dst Destination
  * @param src Source
- * @param count Number of bytes
+ * @param cnt Number of bytes
  */
-constexpr void copy(void *dst, const void *src, size_t count)
+constexpr void copy(void *dst, const void *src, size_t cnt)
 {
-    std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + count, static_cast<byte*>(dst));
+    std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + cnt, static_cast<byte*>(dst));
 }
 
 /**
@@ -73,22 +90,22 @@ constexpr void copy(void *dst, const void *src, size_t count)
  * 
  * @param dst Memory to fill
  * @param val Byte value
- * @param count Number of bytes
+ * @param cnt Number of bytes
  */
-constexpr void fill(void *dst, byte val, size_t count)
+constexpr void fill(void *dst, byte val, size_t cnt)
 {
-    std::fill_n(static_cast<byte*>(dst), count, val);
+    std::fill_n(static_cast<byte*>(dst), cnt, val);
 }
 
 /**
  * @brief Reliably zero out memory region.
  * 
  * @param dst Memory to zero out
- * @param count Number of bytes
+ * @param cnt Number of bytes
  */
-constexpr void zero(void *dst, size_t count)
+constexpr void zero(void *dst, size_t cnt)
 {
-    std::fill_n(static_cast<volatile byte*>(dst), count, 0);
+    std::fill_n(static_cast<volatile byte*>(dst), cnt, 0);
 }
 
 /**

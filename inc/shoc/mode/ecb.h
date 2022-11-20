@@ -6,40 +6,46 @@
 namespace shoc {
 
 /**
- * @brief Encrypt with block cipher in electronic codebook mode.
- * All pointers MUST be valid and length is multiple of 16.
+ * @brief Encrypt with block cipher in electronic codebook mode. All 
+ * pointers MUST be valid and length be multiple of E::block_size.
  * 
  * @tparam E Block cipher
  * @param key Key
  * @param in Plain text
  * @param out Cipher text 
- * @param len Text length, multiple of 16
+ * @param len Text length, multiple of E::block_size
  */
 template<class E>
-inline void ecb_encrypt(const byte *key, const byte *in, byte *out, size_t len)
+constexpr void ecb_encrypt(span_i<E::block_size> key, const byte* in, byte* out, size_t len)
 {
+    assert((len % E::block_size) == 0);
+
     E ciph {key};
     
-    for (size_t i = 0; i < len; i += 16)
-        ciph.encrypt(in + i, out + i);
+    for (size_t i = 0; i < len; i += E::block_size)
+        ciph.encrypt(
+            span_i<E::block_size>{in + i}, 
+            span_o<E::block_size>{out + i});
 }
 
 /**
- * @brief Decrypt with block cipher in electronic codebook mode.
- * All pointers MUST be valid and length is multiple of 16.
+ * @brief Decrypt with block cipher in electronic codebook mode. All 
+ * pointers MUST be valid and length is multiple of E::block_size.
  * 
  * @tparam E Block cipher
  * @param key Key
  * @param in Cipher text
  * @param out Plain text
- * @param len Text length, multiple of 16
+ * @param len Text length, multiple of E::block_size
  */
 template<class E>
 inline void ecb_decrypt(const byte *key, const byte *in, byte *out, size_t len)
 {
+    assert((len % E::block_size) == 0);
+
     E ciph {key};
 
-    for (size_t i = 0; i < len; i += 16)
+    for (size_t i = 0; i < len; i += E::block_size())
         ciph.decrypt(in + i, out + i);
 }
 
