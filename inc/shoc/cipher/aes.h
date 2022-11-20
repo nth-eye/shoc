@@ -3,6 +3,8 @@
 
 #include "shoc/util.h"
 
+#define SHOC_AES_EXP true
+
 namespace shoc {
 namespace impl::aes {
 
@@ -87,13 +89,13 @@ enum type {
 
 template<type T = type_128>
 class context {
-    static constexpr auto nk = 4 + 2 * T;
-    static constexpr auto nb = 4;
-    static constexpr auto nr = 10 + 2 * T;
+    static constexpr size_t nk = 4 + 2 * T;
+    static constexpr size_t nb = 4;
+    static constexpr size_t nr = 10 + 2 * T;
 public:
-    static constexpr auto state_size    = nb * 4;
-    static constexpr auto block_size    = nb * 4;
-    static constexpr auto key_size      = nk * sizeof(word);
+    static constexpr size_t state_size  = nb * 4;
+    static constexpr size_t block_size  = nb * 4;
+    static constexpr size_t key_size    = nk * sizeof(word);
 public:
     constexpr context() = default;
     constexpr context(span_i<key_size> key) { init(key); }
@@ -104,7 +106,11 @@ public:
     constexpr void encrypt(span_i<block_size> in, span_o<block_size> out);
     constexpr void decrypt(span_i<block_size> in, span_o<block_size> out);
 private:
-    constexpr void add_round_key(const word *key);
+#if (SHOC_AES_EXP)
+    constexpr void add_round_key(span_i<nb, word> key);
+#else
+    constexpr void add_round_key(const word* key);
+#endif
     constexpr void sub_bytes();
     constexpr void shift_rows();
     constexpr void mix_columns();
@@ -113,8 +119,46 @@ private:
     constexpr void inv_mix_columns();
 private:
     byte state[nb * 4] = {};
+#if (SHOC_AES_EXP)
+    word words[nr + 1][nb] = {};
+#else
     word words[nb * (nr + 1)] = {};
+#endif
 };
+
+#if (SHOC_AES_EXP)
+
+template<type T> 
+constexpr void context<T>::init(span_i<key_size> key)
+{
+    size_t i = 0;
+
+    for (auto j = 0; j < nb; ++j) {
+        words[i][j] = 
+            (key[nb * i + 0] << 24) | 
+            (key[nb * i + 1] << 16) |
+            (key[nb * i + 2] << 8 ) | 
+            (key[nb * i + 3]);
+    }
+    for (i = 0; i < nk; ++i) {
+        words_flat[i] = 
+            (key[nb * i + 0] << 24) | 
+            (key[nb * i + 1] << 16) |
+            (key[nb * i + 2] << 8 ) | 
+            (key[nb * i + 3]);
+    }
+    for (; i < nb * (nr + 1); ++i) {
+        auto tmp = words_flat[i - 1];
+        if (i % nk == 0) {
+            tmp = subword(rotword(tmp)) ^ rconst[i / nk];
+        } else if (nk > 6 && i % nk == 4) {
+            tmp = subword(tmp);
+        }
+        words_flat[i] = words_flat[i - nk] ^ tmp;
+    }
+}
+
+#else
 
 template<type T> 
 constexpr void context<T>::init(span_i<key_size> key)
@@ -139,11 +183,60 @@ constexpr void context<T>::init(span_i<key_size> key)
     }
 }
 
+#endif
+
 template<type T> 
 constexpr void context<T>::deinit()
 {
-    zero(this, sizeof(*this));
+    if (std::is_constant_evaluated())
+        zero(state, sizeof(state));
+    else
+        zero(this, sizeof(*this));
 }
+
+#if (SHOC_AES_EXP)
+
+template<type T> 
+constexpr void context<T>::encrypt(span_i<block_size> in, span_o<block_size> out)
+{
+    copy(state, in.data(), sizeof(state));
+
+    add_round_key(words[0]);
+    for (auto round = 1u; round < nr; ++round) {
+        sub_bytes();
+        shift_rows();
+        mix_columns();
+        add_round_key(words[round]);
+    }
+    sub_bytes();
+    shift_rows();
+    add_round_key(words[nr]);
+    
+    copy(out.data(), state, sizeof(state));
+    zero(state, sizeof(state));
+}
+
+template<type T> 
+constexpr void context<T>::decrypt(span_i<block_size> in, span_o<block_size> out)
+{
+    copy(state, in.data(), sizeof(state));
+
+    add_round_key(words[nr]);
+    for (auto round = nr - 1; round > 0; --round) {
+        inv_shift_rows();
+        inv_sub_bytes();
+        add_round_key(words[round]);
+        inv_mix_columns();
+    }
+    inv_shift_rows();
+    inv_sub_bytes();
+    add_round_key(words[0]);
+    
+    copy(out.data(), state, sizeof(state));
+    zero(state, sizeof(state));
+}
+
+#else
 
 template<type T> 
 constexpr void context<T>::encrypt(span_i<block_size> in, span_o<block_size> out)
@@ -151,7 +244,7 @@ constexpr void context<T>::encrypt(span_i<block_size> in, span_o<block_size> out
     copy(state, in.data(), sizeof(state));
 
     add_round_key(&words[nb * 0]);
-    for (int round = 1; round < nr; ++round) {
+    for (auto round = 1u; round < nr; ++round) {
         sub_bytes();
         shift_rows();
         mix_columns();
@@ -171,7 +264,7 @@ constexpr void context<T>::decrypt(span_i<block_size> in, span_o<block_size> out
     copy(state, in.data(), sizeof(state));
 
     add_round_key(&words[nb * nr]);
-    for (int round = nr - 1; round > 0; --round) {
+    for (auto round = nr - 1; round > 0; --round) {
         inv_shift_rows();
         inv_sub_bytes();
         add_round_key(&words[nb * round]);
@@ -185,8 +278,14 @@ constexpr void context<T>::decrypt(span_i<block_size> in, span_o<block_size> out
     zero(state, sizeof(state));
 }
 
-template<type T> 
+#endif
+
+template<type T>
+#if (SHOC_AES_EXP) 
+constexpr void context<T>::add_round_key(span_i<nb, word> key)
+#else
 constexpr void context<T>::add_round_key(const word *key)
+#endif
 {
     state[0]    ^= key[0] >> 24; 
     state[1]    ^= key[0] >> 16;
