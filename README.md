@@ -5,6 +5,7 @@ Software-Header-Only-Crypto library in C++.
 ## TODO
 
 - [ ] source
+    - [ ] safer interface (span_i/o)
     - [ ] byteswap
     - [ ] assertions
     - [ ] xoodoo family algorithms
@@ -17,11 +18,13 @@ Software-Header-Only-Crypto library in C++.
         - [ ] sha1
         - [ ] sha2
         - [ ] sha3
-    - [ ] cipher
-        - [ ] aes
+    - [x] cipher
+        - [x] aes
     - [ ] ecc
         - [ ] crc
 - [ ] tests
+    - [x] cipher
+        - [x] aes
 - [ ] readme
     - [ ] intro
     - [ ] guide

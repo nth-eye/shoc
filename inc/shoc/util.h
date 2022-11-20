@@ -13,20 +13,22 @@ namespace shoc {
 using byte = uint8_t;
 
 /**
- * @brief Input (const) span of bytes.
+ * @brief Input (const) span.
  * 
  * @tparam N Size
+ * @tparam T Type
  */
-template<size_t N = std::dynamic_extent>
-using span_i = std::span<const byte, N>;
+template<size_t N = std::dynamic_extent, class T = byte>
+using span_i = std::span<const T, N>;
 
 /**
- * @brief Output (non-const) span of bytes.
+ * @brief Output (non-const) span.
  * 
  * @tparam N Size
+ * @tparam T Type
  */
-template<size_t N = std::dynamic_extent>
-using span_o = std::span<byte, N>;
+template<size_t N = std::dynamic_extent, class T = byte>
+using span_o = std::span<T, N>;
 
 /**
  * @brief Wrapper for swap function.
@@ -80,7 +82,7 @@ constexpr bool little_endian()
  * @param src Source
  * @param cnt Number of bytes
  */
-constexpr void copy(void *dst, const void *src, size_t cnt)
+constexpr void copy(void* dst, const void *src, size_t cnt)
 {
     std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + cnt, static_cast<byte*>(dst));
 }
@@ -92,7 +94,7 @@ constexpr void copy(void *dst, const void *src, size_t cnt)
  * @param val Byte value
  * @param cnt Number of bytes
  */
-constexpr void fill(void *dst, byte val, size_t cnt)
+constexpr void fill(void* dst, byte val, size_t cnt)
 {
     std::fill_n(static_cast<byte*>(dst), cnt, val);
 }
@@ -103,9 +105,13 @@ constexpr void fill(void *dst, byte val, size_t cnt)
  * @param dst Memory to zero out
  * @param cnt Number of bytes
  */
-constexpr void zero(void *dst, size_t cnt)
+constexpr void zero(void* dst, size_t cnt)
 {
-    std::fill_n(static_cast<volatile byte*>(dst), cnt, 0);
+    // if (std::is_constant_evaluated()) {
+    //     std::fill_n(static_cast<byte*>(dst), cnt, 0);
+    // } else {
+        std::fill_n(static_cast<volatile byte*>(dst), cnt, 0);
+    // }
 }
 
 /**
