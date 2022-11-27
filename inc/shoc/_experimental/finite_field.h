@@ -63,7 +63,7 @@ struct ff_int {
 
     constexpr ff_int() = default;
     constexpr ff_int(value_type val) : val{val}             {}
-    constexpr operator value_type() const                   { return val;}
+    constexpr operator value_type() const                   { return val; }
     friend constexpr bool operator==(ff_int x, ff_int y)    { return x.val == y.val; }
     friend constexpr bool operator!=(ff_int x, ff_int y)    { return x.val != y.val; }
     friend constexpr ff_int operator+(ff_int x, ff_int y)   { return ff_mod(x.val + y.val, P); }
