@@ -31,15 +31,10 @@ template<size_t N = std::dynamic_extent, class T = byte>
 using span_o = std::span<T, N>;
 
 /**
- * @brief Wrapper for swap function.
+ * @brief Wrapper for std::swap function.
  * 
- * @param x
- * @param y
  */
-constexpr void swap(auto &x, auto &y)
-{ 
-    std::swap(x, y); 
-}
+using std::swap;
 
 /**
  * @brief Rotate bits of an integer to left.
@@ -75,16 +70,22 @@ constexpr bool little_endian()
     return std::endian::native == std::endian::little; 
 }
 
-/**
- * @brief Copy from one memory region to another.
- * 
- * @param dst Destination
- * @param src Source
- * @param cnt Number of bytes
- */
-constexpr void copy(void* dst, const void *src, size_t cnt)
+// /**
+//  * @brief Copy from one memory region to another.
+//  * 
+//  * @param dst Destination
+//  * @param src Source
+//  * @param cnt Number of bytes
+//  */
+// constexpr void copy(void* dst, const void *src, size_t cnt)
+// {
+//     std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + cnt, static_cast<byte*>(dst));
+// }
+
+template<class T>
+constexpr void copy(T* dst, const T* src, size_t cnt)
 {
-    std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + cnt, static_cast<byte*>(dst));
+    std::copy(src, src + cnt, dst);
 }
 
 /**
@@ -99,19 +100,21 @@ constexpr void fill(void* dst, byte val, size_t cnt)
     std::fill_n(static_cast<byte*>(dst), cnt, val);
 }
 
-/**
- * @brief Reliably zero out memory region.
- * 
- * @param dst Memory to zero out
- * @param cnt Number of bytes
- */
-constexpr void zero(void* dst, size_t cnt)
+// /**
+//  * @brief Reliably zero out memory region.
+//  * 
+//  * @param dst Memory to zero out
+//  * @param cnt Number of bytes
+//  */
+// constexpr void zero(void* dst, size_t cnt)
+// {
+//     std::fill_n(static_cast<volatile byte*>(dst), cnt, 0);
+// }
+
+template<class T>
+constexpr void zero(T* dst, size_t cnt)
 {
-    // if (std::is_constant_evaluated()) {
-    //     std::fill_n(static_cast<byte*>(dst), cnt, 0);
-    // } else {
-        std::fill_n(static_cast<volatile byte*>(dst), cnt, 0);
-    // }
+    std::fill_n(dst, cnt, T{});
 }
 
 /**

@@ -1,10 +1,11 @@
 #include <gtest/gtest.h>
 #include "shoc/cipher/aes.h"
 
-using namespace shoc;
+namespace shoc {
+namespace {
 
 template<size_t N>
-static void compare(span_i<N> out, span_i<N> exp)
+void compare(span_i<N> out, span_i<N> exp)
 {
     ASSERT_TRUE(out.data());
     ASSERT_TRUE(exp.data());
@@ -14,7 +15,7 @@ static void compare(span_i<N> out, span_i<N> exp)
 }
 
 template<class E>
-static void check(span_i<E::key_size> key, span_i<E::block_size> msg, span_i<E::block_size> exp)
+void check(span_i<E::key_size> key, span_i<E::block_size> msg, span_i<E::block_size> exp)
 {
     byte out[E::block_size] = {};
 
@@ -24,6 +25,8 @@ static void check(span_i<E::key_size> key, span_i<E::block_size> msg, span_i<E::
     compare(span_i{out}, exp);
     cipher.decrypt(out, out);
     compare(span_i{out}, msg);
+}
+
 }
 
 TEST(Cipher, Aes128)
@@ -73,18 +76,16 @@ TEST(Cipher, AesConstexpr)
     constexpr const byte exp[16]  = { 0x8e, 0xa2, 0xb7, 0xca, 0x51, 0x67, 0x45, 0xbf, 0xea, 0xfc, 0x49, 0x90, 0x4b, 0x49, 0x60, 0x89 };
     constexpr const byte key[32]  = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 
                                       0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
-    constexpr auto encrypt_res = [&](){
-        std::array<byte, aes256::block_size> out = {};
+    constexpr auto out = [&] {
+        std::array<byte, aes256::block_size> enc = {};
+        std::array<byte, aes256::block_size> dec = {};
         aes256 cipher {key};
-        cipher.encrypt(msg, out);
-        return out;
+        cipher.encrypt(msg, enc);
+        cipher.decrypt(enc, dec);
+        return std::pair{enc, dec};
     }();
-    constexpr auto decrypt_res = [&]() {
-        std::array<byte, aes256::block_size> out = {};
-        aes256 cipher {key};
-        cipher.decrypt(encrypt_res, out);
-        return out;
-    }();
-    compare(span_i{encrypt_res}, span_i{exp});
-    compare(span_i{decrypt_res}, span_i{msg});
+    compare(span_i{out.first}, span_i{exp});
+    compare(span_i{out.second}, span_i{msg});
+}
+
 }
