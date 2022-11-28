@@ -5,54 +5,21 @@
 
 namespace shoc {
 
-struct Md2 : Eater<Md2> {
-    static constexpr size_t SIZE        = 16;
-    static constexpr size_t STATE_SIZE  = 16;   // In bytes
-    static constexpr size_t BLOCK_SIZE  = 16;   // In bytes
+struct md2 : consumer<md2, 16> {
+    static constexpr size_t state_size = 16; // In bytes
+    static constexpr size_t block_size = 16; // In bytes
 public:
-    void init();
-    void feed(const void *in, size_t len);
-    void stop(byte *out);
+    constexpr void init();
+    constexpr void feed(span_i<> in);
+    constexpr void stop(span_o<hash_size> out);
 private:
-    void step();
+    constexpr void step();
 private:
     byte checksum[16];
-    byte state[STATE_SIZE];
-    byte block[BLOCK_SIZE];
+    byte state[state_size];
+    byte block[block_size];
     byte block_idx;
-};
-
-inline void Md2::init()
-{
-    fill(this, 0, sizeof(*this));
-}
-
-inline void Md2::feed(const void *in, size_t len)
-{
-    assert(in || !len);
-
-    auto p = static_cast<const byte*>(in);
-
-    while (len--) {
-        block[block_idx++] = *p++;
-        if (block_idx == sizeof(block))
-            step();
-    }
-}
-
-inline void Md2::stop(byte *out)
-{
-    assert(out);
-    auto padding = sizeof(block) - block_idx;
-    fill(block + block_idx, padding, padding);
-    step();
-    feed(checksum, sizeof(checksum));
-    copy(out, state, sizeof(state));
-    zero(this, sizeof(*this));
-}
-
-inline void Md2::step()
-{
+private:
     static constexpr byte table[] = { 
         0x29, 0x2e, 0x43, 0xc9, 0xa2, 0xd8, 0x7c, 0x01, 0x3d, 0x36, 0x54, 0xa1, 0xec, 0xf0, 0x06, 0x13, 
         0x62, 0xa7, 0x05, 0xf3, 0xc0, 0xc7, 0x73, 0x8c, 0x98, 0x93, 0x2b, 0xd9, 0xbc, 0x4c, 0x82, 0xca, 
@@ -71,7 +38,34 @@ inline void Md2::step()
         0xf2, 0xef, 0xb7, 0x0e, 0x66, 0x58, 0xd0, 0xe4, 0xa6, 0x77, 0x72, 0xf8, 0xeb, 0x75, 0x4b, 0x0a, 
         0x31, 0x44, 0x50, 0xb4, 0x8f, 0xed, 0x1f, 0x1a, 0xdb, 0x99, 0x8d, 0x33, 0x9f, 0x11, 0x83, 0x14,
     };
+};
 
+constexpr void md2::init()
+{
+    fill(this, 0, sizeof(*this));
+}
+
+constexpr void md2::feed(span_i<> in)
+{
+    for (auto it : in) {
+        block[block_idx++] = it;
+        if (block_idx == sizeof(block))
+            step();
+    }
+}
+
+constexpr void md2::stop(span_o<hash_size> out)
+{
+    auto padding = sizeof(block) - block_idx;
+    fill(block + block_idx, padding, padding);
+    step();
+    feed(checksum);
+    copy(out.data(), state, sizeof(state));
+    zero(this, sizeof(*this));
+}
+
+constexpr void md2::step()
+{
     byte buf[48];
 
     copy(buf,                 state, sizeof(state));
@@ -82,7 +76,7 @@ inline void Md2::step()
 
     byte t = 0;
     for (int i = 0; i < 18; ++i) {
-        for (auto &j : buf)
+        for (auto& j : buf)
             t = j ^= table[t];
         t += i;
     }

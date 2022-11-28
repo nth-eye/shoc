@@ -5,28 +5,42 @@
 
 namespace shoc {
 
-struct Sha1 : Eater<Sha1> {
-    static constexpr size_t SIZE        = 20;
-    static constexpr size_t STATE_SIZE  = 5;    // In words
-    static constexpr size_t BLOCK_SIZE  = 64;   // In bytes
-public:
-    void init();
-    void feed(const void *in, size_t len);
-    void stop(byte *out);
+struct sha1 : consumer<sha1, 20> {
+    static constexpr size_t state_size = 5;     // In words
+    static constexpr size_t block_size = 64;    // In bytes
 private:
-    void pad();
-    void step();
+    static constexpr size_t pad_start = block_size - 8;
+public:
+    constexpr void init();
+    constexpr void feed(span_i<> in);
+    constexpr void stop(span_o<hash_size> out);
+private:
+    constexpr void pad();
+    constexpr void step();
 private:
     using word = uint32_t;
+    template<size_t start, size_t end, word k, decltype(ch<word>) Fn>
+    static constexpr void round(word(&w)[80], word (&var)[state_size])
+    {
+        enum { a, b, c, d, e };
+        for (size_t t = start; t < end; ++t) {
+            word tmp = rol(var[a], 5) + var[e] + w[t] + k + Fn(var[b], var[c], var[d]);
+            var[e] = var[d];
+            var[d] = var[c]; 
+            var[c] = rol(var[b], 30);
+            var[b] = var[a];
+            var[a] = tmp;
+        }
+    }
 private:
     word length_low;
     word length_high;
-    word state[STATE_SIZE];
-    byte block[BLOCK_SIZE];
+    word state[state_size];
+    byte block[block_size];
     byte block_idx;
 };
 
-inline void Sha1::init()
+constexpr void sha1::init()
 {
     state[0] = 0x67452301u;
     state[1] = 0xefcdab89u;
@@ -37,29 +51,21 @@ inline void Sha1::init()
     block_idx = length_high = length_low = 0;
 }
 
-inline void Sha1::feed(const void *in, size_t len)
+constexpr void sha1::feed(span_i<> in)
 {
-    assert(in || !len);
-
-    auto p = static_cast<const byte*>(in);
-
-    while (len--) {
-
-        block[block_idx++] = *p++;
-
+    for (auto it : in) {
+        block[block_idx++] = it;
         if ((length_low += 8) == 0)
             length_high += 1;
-        if (block_idx == BLOCK_SIZE)
+        if (block_idx == block_size)
             step();
     }
 }
 
-inline void Sha1::stop(byte *out)
+constexpr void sha1::stop(span_o<hash_size> out)
 {
-    assert(out);
     pad();
-
-    for (size_t i = 0, j = 0; i < STATE_SIZE; ++i, j += 4) {
+    for (size_t i = 0, j = 0; i < state_size; ++i, j += 4) {
         out[j + 0] = state[i] >> 24;
         out[j + 1] = state[i] >> 16;
         out[j + 2] = state[i] >> 8;
@@ -68,31 +74,27 @@ inline void Sha1::stop(byte *out)
     zero(this, sizeof(*this));
 }
 
-inline void Sha1::pad()
+constexpr void sha1::pad()
 {
-    static constexpr size_t pad_start = BLOCK_SIZE - 8;
-
     block[block_idx++] = 0x80;
 
     if (block_idx > pad_start) {
-        fill(block + block_idx, 0, BLOCK_SIZE - block_idx);
+        fill(block + block_idx, 0, block_size - block_idx);
         step();
     }
     fill(block + block_idx, 0, pad_start - block_idx);
 
     for (size_t i = 0, j = 0; i < 4; ++i, j += 8) {
-        block[BLOCK_SIZE - 1 - i] = length_low  >> j;
-        block[BLOCK_SIZE - 5 - i] = length_high >> j;
+        block[block_size - 1 - i] = length_low  >> j;
+        block[block_size - 5 - i] = length_high >> j;
     }
     step();
 }
 
-inline void Sha1::step()
+constexpr void sha1::step()
 {
-    enum { a, b, c, d, e };
-
     word w[80];
-    word var[STATE_SIZE];
+    word var[state_size];
     
     copy(var, state, sizeof(state));
 
@@ -105,22 +107,12 @@ inline void Sha1::step()
     for (size_t t = 16; t < 80; ++t)
         w[t] = rol(w[t-3] ^ w[t-8] ^ w[t-14] ^ w[t-16], 1);
 
-#define SHA_1_ROUND(start, end, K, ...)                                 \
-    for (size_t t = start; t < end; ++t) {                              \
-        word tmp = rol(var[a], 5) + var[e] + w[t] + K + (__VA_ARGS__);  \
-        var[e] = var[d];                                                \
-        var[d] = var[c];                                                \
-        var[c] = rol(var[b], 30);                                       \
-        var[b] = var[a];                                                \
-        var[a] = tmp;                                                   \
-    }
-    SHA_1_ROUND(0,  20, 0x5a827999, ch(var[b], var[c], var[d]))
-    SHA_1_ROUND(20, 40, 0x6ed9eba1, parity(var[b], var[c], var[d]))
-    SHA_1_ROUND(40, 60, 0x8f1bbcdc, maj(var[b], var[c], var[d]))
-    SHA_1_ROUND(60, 80, 0xca62c1d6, parity(var[b], var[c], var[d]))
-#undef SHA_1_ROUND
+    round<0,  20, 0x5a827999, ch>(w, var);
+    round<20, 40, 0x6ed9eba1, parity>(w, var);
+    round<40, 60, 0x8f1bbcdc, maj>(w, var);
+    round<60, 80, 0xca62c1d6, parity>(w, var);
 
-    for (size_t i = 0; i < STATE_SIZE; ++i)
+    for (size_t i = 0; i < state_size; ++i)
         state[i] += var[i];
 
     block_idx = 0;

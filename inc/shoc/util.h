@@ -31,7 +31,7 @@ template<size_t N = std::dynamic_extent, class T = byte>
 using span_o = std::span<T, N>;
 
 /**
- * @brief Wrapper for std::swap function.
+ * @brief Using std::swap function.
  * 
  */
 using std::swap;
@@ -70,22 +70,16 @@ constexpr bool little_endian()
     return std::endian::native == std::endian::little; 
 }
 
-// /**
-//  * @brief Copy from one memory region to another.
-//  * 
-//  * @param dst Destination
-//  * @param src Source
-//  * @param cnt Number of bytes
-//  */
-// constexpr void copy(void* dst, const void *src, size_t cnt)
-// {
-//     std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + cnt, static_cast<byte*>(dst));
-// }
-
-template<class T>
-constexpr void copy(T* dst, const T* src, size_t cnt)
+/**
+ * @brief Copy from one memory region to another.
+ * 
+ * @param dst Destination
+ * @param src Source
+ * @param cnt Number of bytes
+ */
+constexpr void copy(void* dst, const void *src, size_t cnt)
 {
-    std::copy(src, src + cnt, dst);
+    std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + cnt, static_cast<byte*>(dst));
 }
 
 /**
@@ -100,21 +94,15 @@ constexpr void fill(void* dst, byte val, size_t cnt)
     std::fill_n(static_cast<byte*>(dst), cnt, val);
 }
 
-// /**
-//  * @brief Reliably zero out memory region.
-//  * 
-//  * @param dst Memory to zero out
-//  * @param cnt Number of bytes
-//  */
-// constexpr void zero(void* dst, size_t cnt)
-// {
-//     std::fill_n(static_cast<volatile byte*>(dst), cnt, 0);
-// }
-
-template<class T>
-constexpr void zero(T* dst, size_t cnt)
+/**
+ * @brief Reliably zero out memory region.
+ * 
+ * @param dst Memory to zero out
+ * @param cnt Number of bytes
+ */
+constexpr void zero(void* dst, size_t cnt)
 {
-    std::fill_n(dst, cnt, T{});
+    std::fill_n(static_cast<volatile byte*>(dst), cnt, 0);
 }
 
 /**
@@ -233,13 +221,19 @@ constexpr void incc(byte *block)
     while (++block[--i] == 0 && i >= B - L);
 }
 
-template<class H>
-struct Eater {
-    void operator()(const void *in, size_t len, byte *out)
+template<class H, size_t N>
+struct consumer {
+    static constexpr auto hash_size = N;
+public:
+    constexpr void operator()(const void* in, size_t len, span_o<hash_size> out)
     {
-        auto &impl = static_cast<H&>(*this);
+        operator()({static_cast<const byte*>(in), len}, out);
+    }
+    constexpr void operator()(span_i<> in, span_o<hash_size> out)
+    {
+        auto& impl = static_cast<H&>(*this);
         impl.init();
-        impl.feed(in, len);
+        impl.feed(in);
         impl.stop(out);
     }
 private:

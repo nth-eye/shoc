@@ -15,7 +15,7 @@ target_link_libraries(shoc PRIVATE libshoc)
 add_executable(testshoc 
     test/cipher/aes.cpp
     # test/ecc/crc.cpp
-    # test/hash/hash.cpp
+    test/hash/hash.cpp
     # test/kdf/hkdf.cpp
     # test/mac/hmac.cpp
     # test/mode/mode.cpp
