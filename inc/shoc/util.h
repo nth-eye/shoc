@@ -3,8 +3,12 @@
 
 #include "utl/bit.h"
 #include "utl/str.h"
+#include "utl/log.h"
 
 namespace shoc {
+
+using std::swap;
+using utl::countof;
 
 /**
  * @brief Alias for underlying byte type.
@@ -29,12 +33,6 @@ using span_i = std::span<const T, N>;
  */
 template<size_t N = std::dynamic_extent, class T = byte>
 using span_o = std::span<T, N>;
-
-/**
- * @brief Using std::swap function.
- * 
- */
-using std::swap;
 
 /**
  * @brief Rotate bits of an integer to left.
@@ -70,16 +68,22 @@ constexpr bool little_endian()
     return std::endian::native == std::endian::little; 
 }
 
-/**
- * @brief Copy from one memory region to another.
- * 
- * @param dst Destination
- * @param src Source
- * @param cnt Number of bytes
- */
-constexpr void copy(void* dst, const void *src, size_t cnt)
+// /**
+//  * @brief Copy from one memory region to another.
+//  * 
+//  * @param dst Destination
+//  * @param src Source
+//  * @param cnt Number of bytes
+//  */
+// constexpr void copy(void* dst, const void *src, size_t cnt)
+// {
+//     std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + cnt, static_cast<byte*>(dst));
+// }
+
+template<class T>
+constexpr void copy(T* dst, const T *src, size_t cnt)
 {
-    std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + cnt, static_cast<byte*>(dst));
+    std::copy(src, src + cnt, dst);
 }
 
 /**
@@ -94,15 +98,21 @@ constexpr void fill(void* dst, byte val, size_t cnt)
     std::fill_n(static_cast<byte*>(dst), cnt, val);
 }
 
+constexpr void fill(byte* dst, byte val, size_t cnt)
+{
+    std::fill_n(dst, cnt, val);
+}
+
 /**
  * @brief Reliably zero out memory region.
  * 
- * @param dst Memory to zero out
- * @param cnt Number of bytes
+ * @param dst Pointer to object to zero out
+ * @param cnt Number of objects
  */
-constexpr void zero(void* dst, size_t cnt)
+template<class T>
+constexpr void zero(T* dst, size_t cnt)
 {
-    std::fill_n(static_cast<volatile byte*>(dst), cnt, 0);
+    std::fill_n(static_cast<volatile T*>(dst), cnt, T(0));
 }
 
 /**
@@ -231,12 +241,13 @@ public:
     }
     constexpr void operator()(span_i<> in, span_o<hash_size> out)
     {
-        auto& impl = static_cast<H&>(*this);
-        impl.init();
-        impl.feed(in);
-        impl.stop(out);
+        impl()->init();
+        impl()->feed(in);
+        impl()->stop(out);
     }
+    constexpr ~consumer()   { impl()->wipe(); }
 private:
+    constexpr auto impl()   { return static_cast<H*>(this); }
     friend H;
 };
 

@@ -142,10 +142,8 @@ constexpr void context<T>::init(span_i<key_size> key)
 template<type T> 
 constexpr void context<T>::deinit()
 {
-    if (std::is_constant_evaluated())
-        zero(state, sizeof(state));
-    else
-        zero(this, sizeof(*this));
+    zero(state, countof(state));
+    zero(words, countof(state));
 }
 
 template<type T> 

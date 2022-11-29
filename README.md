@@ -5,26 +5,43 @@ Software-Header-Only-Crypto library in C++.
 ## TODO
 
 - [ ] source
+    - [x] unified api for consumers (md2, sha1, hmac, etc)
     - [ ] safer interface (span_i/o)
     - [ ] byteswap
+    - [ ] put-, get- little_endian/big_endian
     - [ ] assertions
     - [ ] xoodoo family algorithms
-    - [ ] hash
-        - [ ] unified api for consumers (md2, sha1, hmac, etc)
-        - [ ] gimli
-        - [ ] md2
-        - [ ] md4
-        - [ ] md5
-        - [ ] sha1
-        - [ ] sha2
-        - [ ] sha3
     - [x] cipher
-        - [x] aes
-    - [ ] ecc
-        - [ ] crc
+    - [x] ecc
+    - [ ] hash
+        - [x] gimli
+        - [x] md2
+        - [x] md4
+        - [x] md5
+        - [x] sha1
+        - [x] sha2
+        - [ ] sha3
+    - [ ] kdf
+        - [ ] hkdf
+    - [ ] mac
+        - [ ] cbc_mac
+        - [ ] gmac
+        - [ ] hmac
 - [ ] tests
     - [x] cipher
-        - [x] aes
+    - [x] ecc
+    - [ ] hash
+        - [ ] constexpr
+        - [x] gimli
+        - [x] md2
+        - [x] md4
+        - [x] md5
+        - [x] sha1
+        - [x] sha2
+        - [ ] sha3
+    - [ ] kdf
+        - [ ] hkdf
+    - [ ]
 - [ ] readme
     - [ ] intro
     - [ ] guide

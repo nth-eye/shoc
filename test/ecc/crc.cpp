@@ -1,42 +1,80 @@
 #include <gtest/gtest.h>
 #include "shoc/ecc/crc.h"
 
-using namespace shoc;
+namespace shoc {
+namespace {
 
-static constexpr auto test_data = "123456789";
-static constexpr auto test_size = 9;
+constexpr byte test_data_bytes[] = "123456789";
+constexpr auto test_data = "123456789";
+constexpr auto test_size = 9;
+constexpr auto test_part = 3;
 
 template<class T, T poly, T init, T xorout, bool refin, bool refout>
-static constexpr auto check_fast_and_slow(T exp)
+auto check_fast_and_slow_constexpr(T exp)
+{
+    static constexpr auto slow_1 = crc_slow<T, poly, init, xorout, refin, refout>(test_data_bytes, test_size);
+    static constexpr auto fast_1 = crc_fast<T, poly, init, xorout, refin, refout>(test_data_bytes, test_size);
+    static constexpr auto slow_2 = [] () {
+        T ret = 0;
+        ret = crc_slow_init<T, init>();
+        ret = crc_slow_feed<T, poly, refin>(ret, test_data_bytes, test_part);
+        ret = crc_slow_feed<T, poly, refin>(ret, test_data_bytes + test_part, test_size - test_part);
+        ret = crc_slow_stop<T, xorout, refout>(ret);
+        return ret;
+    }();
+    static constexpr auto fast_2 = [] () {
+        T ret = 0;
+        ret = crc_fast_init<T, init>();
+        ret = crc_fast_feed<T, poly, refin>(ret, test_data_bytes, test_part);
+        ret = crc_fast_feed<T, poly, refin>(ret, test_data_bytes + test_part, test_size - test_part);
+        ret = crc_fast_stop<T, xorout, refout>(ret);
+        return ret;
+    }();
+
+    ASSERT_EQ(exp, slow_1);
+    ASSERT_EQ(exp, slow_2);
+    ASSERT_EQ(exp, fast_1);
+    ASSERT_EQ(exp, fast_2);
+}
+
+template<class T, T poly, T init, T xorout, bool refin, bool refout>
+auto check_fast_and_slow(T exp)
 {
     EXPECT_EQ(exp, (crc_slow<T, poly, init, xorout, refin, refout>(test_data, test_size)));
     EXPECT_EQ(exp, (crc_fast<T, poly, init, xorout, refin, refout>(test_data, test_size)));
+
+    T ret = 0;
+
+    ret = crc_slow_init<T, init>();
+    ret = crc_slow_feed<T, poly, refin>(ret, test_data, test_part);
+    ret = crc_slow_feed<T, poly, refin>(ret, test_data + test_part, test_size - test_part);
+    ret = crc_slow_stop<T, xorout, refout>(ret);
+
+    EXPECT_EQ(exp, ret);
+
+    ret = crc_fast_init<T, init>();
+    ret = crc_fast_feed<T, poly, refin>(ret, test_data, test_part);
+    ret = crc_fast_feed<T, poly, refin>(ret, test_data + test_part, test_size - test_part);
+    ret = crc_fast_stop<T, xorout, refout>(ret);
+
+    EXPECT_EQ(exp, ret);
+
+    // check_fast_and_slow_constexpr<T, poly, init, xorout, refin, refout>(exp);
 }
 
 template<uint8_t poly, uint8_t init, uint8_t xorout, bool refin, bool refout>
-static constexpr auto check_fast_and_slow_8(uint8_t exp)
-{
-    return check_fast_and_slow<uint8_t, poly, init, xorout, refin, refout>(exp);
-}
+constexpr auto check_fast_and_slow_8(uint8_t exp)   { return check_fast_and_slow<uint8_t, poly, init, xorout, refin, refout>(exp); }
 
 template<uint16_t poly, uint16_t init, uint16_t xorout, bool refin, bool refout>
-static constexpr auto check_fast_and_slow_16(uint16_t exp)
-{
-    return check_fast_and_slow<uint16_t, poly, init, xorout, refin, refout>(exp);
-}
+constexpr auto check_fast_and_slow_16(uint16_t exp) { return check_fast_and_slow<uint16_t, poly, init, xorout, refin, refout>(exp); }
 
 template<uint32_t poly, uint32_t init, uint32_t xorout, bool refin, bool refout>
-static constexpr auto check_fast_and_slow_32(uint32_t exp)
-{
-    return check_fast_and_slow<uint32_t, poly, init, xorout, refin, refout>(exp);
-}
+constexpr auto check_fast_and_slow_32(uint32_t exp) { return check_fast_and_slow<uint32_t, poly, init, xorout, refin, refout>(exp); }
 
 template<uint64_t poly, uint64_t init, uint64_t xorout, bool refin, bool refout>
-static constexpr auto check_fast_and_slow_64(uint64_t exp)
-{
-    return check_fast_and_slow<uint64_t, poly, init, xorout, refin, refout>(exp);
-}
+constexpr auto check_fast_and_slow_64(uint64_t exp) { return check_fast_and_slow<uint64_t, poly, init, xorout, refin, refout>(exp); }
 
+}
 
 TEST(Ecc, Crc8) 
 {
@@ -120,4 +158,6 @@ TEST(Ecc, Crc64)
     check_fast_and_slow_64<0x259c84cba6426349, 0xffffffffffffffff, 0x0000000000000000, 1, 1>(0x75d4b74f024eceea); // CRC-64/MS
     check_fast_and_slow_64<0x42f0e1eba9ea3693, 0xffffffffffffffff, 0xffffffffffffffff, 0, 0>(0x62ec59e3f1a4f00a); // CRC-64/WE
     check_fast_and_slow_64<0x42f0e1eba9ea3693, 0xffffffffffffffff, 0xffffffffffffffff, 1, 1>(0x995dc9bbdf1939fa); // CRC-64/XZ
+}
+
 }

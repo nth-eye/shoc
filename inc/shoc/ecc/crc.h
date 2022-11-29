@@ -44,10 +44,25 @@ constexpr auto crc_table(T poly)
  * @tparam poly Polynomial
  */
 template<class T, T poly>
-struct Table {
+struct table {
     static constexpr auto _ = crc_table(poly);
 };
 
+}
+
+// SECTION: Slow
+
+/**
+ * @brief Get initial value. Actually unnecesarry for slow version.
+ * 
+ * @tparam T Integer type
+ * @tparam init Initial value
+ * @return Initial value
+ */
+template<class T, T init>
+constexpr T crc_slow_init()
+{
+    return init;
 }
 
 /**
@@ -63,11 +78,11 @@ struct Table {
  * @return CRC value
  */
 template<class T, T poly, bool refin>
-constexpr T crc_feed_slow(T val, const void *data, size_t size)
+constexpr T crc_slow_feed(T val, const void* data, size_t size)
 {
     constexpr int bits = sizeof(T) * 8;
     constexpr T topbit = T(1) << (bits - 1);
-    auto p = static_cast<const uint8_t*>(data);
+    auto p = static_cast<const byte*>(data);
 
     while (size--) {
         auto b = *p++;
@@ -78,6 +93,23 @@ constexpr T crc_feed_slow(T val, const void *data, size_t size)
             val = val & topbit ? (val << 1) ^ poly : (val << 1);
     }
     return val;
+}
+
+/**
+ * @brief Finalize CRC result by optional reflection and xoring. 
+ * 
+ * @tparam T Integer type
+ * @tparam xorout Value to XOR with
+ * @tparam refout Reflection flag
+ * @param val Current value
+ * @return Final CRC value
+ */
+template<class T, T xorout, bool refout>
+constexpr T crc_slow_stop(T val)
+{
+    if constexpr (refout)
+        val = bitswap(val);
+    return val ^ xorout;
 }
 
 /**
@@ -96,12 +128,27 @@ constexpr T crc_feed_slow(T val, const void *data, size_t size)
  * @return CRC value
  */
 template<class T, T poly, T init, T xorout, bool refin, bool refout>
-constexpr T crc_slow(const void *data, size_t size)
+constexpr T crc_slow(const void* data, size_t size)
 {
-    auto val = crc_feed_slow<T, poly, refin>(init, data, size);
-    if constexpr (refout)
-        val = bitswap(val);
-    return val ^ xorout;
+    auto val = crc_slow_feed<T, poly, refin>(init, data, size);
+    return crc_slow_stop<T, xorout, refout>(val);
+}
+
+// !SECTION: Slow
+
+// SECTION: Fast
+
+/**
+ * @brief Get prepared (reflected) initial value.
+ * 
+ * @tparam T Integer type
+ * @tparam init Initial value
+ * @return Reflected initial value
+ */
+template<class T, T init>
+constexpr T crc_fast_init()
+{
+    return bitswap(init);
 }
 
 /**
@@ -117,17 +164,34 @@ constexpr T crc_slow(const void *data, size_t size)
  * @return CRC value
  */
 template<class T, T poly, bool refin>
-constexpr T crc_feed_fast(T val, const void *data, size_t size)
+constexpr T crc_fast_feed(T val, const void* data, size_t size)
 {
-    auto p = static_cast<const uint8_t*>(data);
+    auto p = static_cast<const byte*>(data);
 
     while (size--) {
         byte b = *p++;
         if constexpr (!refin)
             b = bitswap(b);
-        val = impl::crc::Table<T, poly>::_[(val ^ b) & 0xff] ^ (val >> 8);
+        val = impl::crc::table<T, poly>::_[(val ^ b) & 0xff] ^ (val >> 8);
     }
     return val;
+}
+
+/**
+ * @brief Finalize CRC result by optional reflection and xoring. 
+ * 
+ * @tparam T Integer type
+ * @tparam xorout Value to XOR with
+ * @tparam refout Reflection flag
+ * @param val Current value
+ * @return Final CRC value
+ */
+template<class T, T xorout, bool refout>
+constexpr T crc_fast_stop(T val)
+{
+    if constexpr (!refout)
+        val = bitswap(val);
+    return val ^ xorout;
 }
 
 /**
@@ -146,13 +210,13 @@ constexpr T crc_feed_fast(T val, const void *data, size_t size)
  * @return CRC value
  */
 template<class T, T poly, T init, T xorout, bool refin, bool refout>
-constexpr T crc_fast(const void *data, size_t size)
+constexpr T crc_fast(const void* data, size_t size)
 {
-    auto val = crc_feed_fast<T, poly, refin>(bitswap(init), data, size);
-    if constexpr (!refout)
-        val = bitswap(val);
-    return val ^ xorout;
+    auto val = crc_fast_feed<T, poly, refin>(bitswap(init), data, size);
+    return crc_fast_stop<T, xorout, refout>(val);
 }
+
+// !SECTION: Fast
 
 }
 

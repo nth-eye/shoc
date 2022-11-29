@@ -14,6 +14,7 @@ public:
     constexpr void init();
     constexpr void feed(span_i<> in);
     constexpr void stop(span_o<hash_size> out);
+    constexpr void wipe();
 private:
     constexpr void pad();
     constexpr void step();
@@ -64,7 +65,16 @@ constexpr void md5::stop(span_o<hash_size> out)
         out[j + 2] = state[i] >> 16;
         out[j + 3] = state[i] >> 24;
     }
-    zero(this, sizeof(*this));
+    wipe();
+}
+
+constexpr void md5::wipe()
+{
+    length_low = 0;
+    length_high = 0;
+    zero(state, countof(state));
+    zero(block, countof(block));
+    block_idx = 0;
 }
 
 constexpr void md5::pad()
@@ -184,7 +194,7 @@ constexpr void md5::step()
 
     block_idx = 0;
 
-    zero(buf, sizeof(buf));
+    zero(buf, countof(buf));
 }
 
 }

@@ -5,13 +5,14 @@
 
 namespace shoc {
 
-struct md2 : consumer<md2, 16> {
+struct md2 : public consumer<md2, 16> {
     static constexpr size_t state_size = 16; // In bytes
     static constexpr size_t block_size = 16; // In bytes
 public:
     constexpr void init();
     constexpr void feed(span_i<> in);
     constexpr void stop(span_o<hash_size> out);
+    constexpr void wipe();
 private:
     constexpr void step();
 private:
@@ -42,7 +43,7 @@ private:
 
 constexpr void md2::init()
 {
-    fill(this, 0, sizeof(*this));
+    wipe();
 }
 
 constexpr void md2::feed(span_i<> in)
@@ -61,7 +62,15 @@ constexpr void md2::stop(span_o<hash_size> out)
     step();
     feed(checksum);
     copy(out.data(), state, sizeof(state));
-    zero(this, sizeof(*this));
+    wipe();
+}
+
+constexpr void md2::wipe()
+{
+    zero(checksum, countof(checksum));
+    zero(state, countof(state));
+    zero(block, countof(block));
+    block_idx = 0;
 }
 
 constexpr void md2::step()

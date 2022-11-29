@@ -14,6 +14,7 @@ public:
     constexpr void init();
     constexpr void feed(span_i<> in);
     constexpr void stop(span_o<hash_size> out);
+    constexpr void wipe();
 private:
     constexpr void pad();
     constexpr void step();
@@ -71,7 +72,16 @@ constexpr void sha1::stop(span_o<hash_size> out)
         out[j + 2] = state[i] >> 8;
         out[j + 3] = state[i] >> 0;
     }
-    zero(this, sizeof(*this));
+    wipe();
+}
+
+constexpr void sha1::wipe()
+{
+    length_low = 0;
+    length_high = 0;
+    zero(state, countof(state));
+    zero(block, countof(block));
+    block_idx = 0;
 }
 
 constexpr void sha1::pad()
