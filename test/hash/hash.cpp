@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "test.h"
 #include "shoc/hash/md2.h"
 #include "shoc/hash/md4.h"
 #include "shoc/hash/md5.h"
@@ -7,18 +7,16 @@
 // #include "shoc/hash/sha3.h"
 #include "shoc/hash/gimli.h"
 
-using namespace shoc;
-
 namespace shoc {
 namespace {
 
-struct Data {
+struct pair {
     std::string_view msg;
     std::string_view exp;
 };
 
 template<class Hash, size_t N>
-void check(const Data (&test)[N])
+void check(const pair (&test)[N])
 {
     Hash hash;
     byte bin[Hash::hash_size] = {};
@@ -35,7 +33,7 @@ void check(const Data (&test)[N])
 
 TEST(Hash, Md2) 
 {
-    const Data test[] = {
+    const pair test[] = {
         { "",
             "8350e5a3e24c153df2275c9f80692773" },
         { "a",
@@ -56,7 +54,7 @@ TEST(Hash, Md2)
 
 TEST(Hash, Md4) 
 {
-    const Data test[] = {
+    const pair test[] = {
         { "",
             "31d6cfe0d16ae931b73c59d7e0c089c0" },
         { "a",
@@ -77,7 +75,7 @@ TEST(Hash, Md4)
 
 TEST(Hash, Md5) 
 {
-    const Data test[] = {
+    const pair test[] = {
         { "",
             "d41d8cd98f00b204e9800998ecf8427e" },
         { "a",
@@ -98,7 +96,7 @@ TEST(Hash, Md5)
 
 TEST(Hash, Sha1)
 {
-    const Data test[] = {
+    const pair test[] = {
         { "abc",
             "a9993e364706816aba3e25717850c26c9cd0d89d" },
         { "",
@@ -117,7 +115,7 @@ TEST(Hash, Sha1)
 
 TEST(Hash, Sha224)
 {
-    const Data test[] = {
+    const pair test[] = {
         { "abc",
             "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7" },
         { "",
@@ -132,7 +130,7 @@ TEST(Hash, Sha224)
 
 TEST(Hash, Sha256)
 {
-    const Data test[] = {
+    const pair test[] = {
         { "abc",
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" },
         { "",
@@ -147,7 +145,7 @@ TEST(Hash, Sha256)
 
 TEST(Hash, Sha384)
 {
-    const Data test[] = {
+    const pair test[] = {
         { "abc",
             "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7" },
         { "",
@@ -162,7 +160,7 @@ TEST(Hash, Sha384)
 
 TEST(Hash, Sha512)
 {
-    const Data test[] = {
+    const pair test[] = {
         { "abc",
             "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f" },
         { "",
@@ -177,7 +175,7 @@ TEST(Hash, Sha512)
 
 TEST(Hash, Sha512_224)
 {
-    const Data test[] = {
+    const pair test[] = {
         { "abc",
             "4634270f707b6a54daae7530460842e20e37ed265ceee9a43e8924aa" },
         { "",
@@ -192,7 +190,7 @@ TEST(Hash, Sha512_224)
 
 TEST(Hash, Sha512_256)
 {
-    const Data test[] = {
+    const pair test[] = {
         { "abc",
             "53048e2681941ef99b2e29b76b4c7dabe4c2d0c634fc6d46e0e2f13107e7af23" },
         { "",
@@ -207,7 +205,7 @@ TEST(Hash, Sha512_256)
 
 TEST(Hash, Gimli)
 {
-    const Data test[] = {
+    const pair test[] = {
         { "There's plenty for the both of us, may the best Dwarf win.",
             "4afb3ff784c7ad6943d49cf5da79facfa7c4434e1ce44f5dd4b28f91a84d22c8" },
         { "If anyone was to ask for my opinion, which I note they're not, I'd say we were taking the long way around.",

@@ -50,18 +50,18 @@ constexpr void md2::feed(span_i<> in)
 {
     for (auto it : in) {
         block[block_idx++] = it;
-        if (block_idx == sizeof(block))
+        if (block_idx == block_size)
             step();
     }
 }
 
 constexpr void md2::stop(span_o<hash_size> out)
 {
-    auto padding = sizeof(block) - block_idx;
+    auto padding = block_size - block_idx;
     fill(block + block_idx, padding, padding);
     step();
     feed(checksum);
-    copy(out.data(), state, sizeof(state));
+    copy(out.data(), state, state_size);
     wipe();
 }
 
@@ -77,8 +77,8 @@ constexpr void md2::step()
 {
     byte buf[48];
 
-    copy(buf,                 state, sizeof(state));
-    copy(buf + sizeof(state), block, sizeof(block));
+    copy(buf,               state, state_size);
+    copy(buf + state_size,  block, block_size);
 
     for (int i = 0; i < 16; ++i)
         buf[i + 32] = state[i] ^ block[i];
@@ -94,7 +94,7 @@ constexpr void md2::step()
     for (int i = 0; i < 16; ++i)
         t = checksum[i] ^= table[block[i] ^ t];
 
-    copy(state, buf, sizeof(state));
+    copy(state, buf, state_size);
     zero(buf, sizeof(buf));
 
     block_idx = 0;

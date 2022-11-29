@@ -1,18 +1,8 @@
-#include <gtest/gtest.h>
+#include "test.h"
 #include "shoc/cipher/aes.h"
 
 namespace shoc {
 namespace {
-
-template<size_t N>
-void compare(span_i<N> out, span_i<N> exp)
-{
-    ASSERT_TRUE(out.data());
-    ASSERT_TRUE(exp.data());
-    ASSERT_TRUE(out.size() == exp.size());
-    for (size_t i = 0; i < N; ++i)
-        ASSERT_EQ(out[i], exp[i]) << "at index " << i;
-}
 
 template<class E>
 void check(span_i<E::key_size> key, span_i<E::block_size> msg, span_i<E::block_size> exp)
@@ -22,9 +12,9 @@ void check(span_i<E::key_size> key, span_i<E::block_size> msg, span_i<E::block_s
     E cipher {key};
 
     cipher.encrypt(msg, out);
-    compare(span_i{out}, exp);
+    compare(out, exp);
     cipher.decrypt(out, out);
-    compare(span_i{out}, msg);
+    compare(out, msg);
 }
 
 }

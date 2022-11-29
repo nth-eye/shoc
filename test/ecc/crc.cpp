@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "test.h"
 #include "shoc/ecc/crc.h"
 
 namespace shoc {
@@ -59,7 +59,7 @@ auto check_fast_and_slow(T exp)
 
     EXPECT_EQ(exp, ret);
 
-    // check_fast_and_slow_constexpr<T, poly, init, xorout, refin, refout>(exp);
+    check_fast_and_slow_constexpr<T, poly, init, xorout, refin, refout>(exp);
 }
 
 template<uint8_t poly, uint8_t init, uint8_t xorout, bool refin, bool refout>

@@ -22,4 +22,5 @@ add_executable(testshoc
     # test/otp/hotp.cpp
     # test/elliptic.cpp
     )
+target_include_directories(testshoc PRIVATE test)
 target_link_libraries(testshoc PRIVATE gtest_main libshoc)
