@@ -12,21 +12,21 @@ constexpr auto test_part = 3;
 template<class T, T poly, T init, T xorout, bool refin, bool refout>
 auto check_fast_and_slow_constexpr(T exp)
 {
-    static constexpr auto slow_1 = crc_slow<T, poly, init, xorout, refin, refout>(test_data_bytes, test_size);
-    static constexpr auto fast_1 = crc_fast<T, poly, init, xorout, refin, refout>(test_data_bytes, test_size);
+    static constexpr auto slow_1 = crc_slow<T, poly, init, xorout, refin, refout>({test_data_bytes, test_size});
+    static constexpr auto fast_1 = crc_fast<T, poly, init, xorout, refin, refout>({test_data_bytes, test_size});
     static constexpr auto slow_2 = [] () {
         T ret = 0;
         ret = crc_slow_init<T, init>();
-        ret = crc_slow_feed<T, poly, refin>(ret, test_data_bytes, test_part);
-        ret = crc_slow_feed<T, poly, refin>(ret, test_data_bytes + test_part, test_size - test_part);
+        ret = crc_slow_feed<T, poly, refin>(ret, {test_data_bytes, test_part});
+        ret = crc_slow_feed<T, poly, refin>(ret, {test_data_bytes + test_part, test_size - test_part});
         ret = crc_slow_stop<T, xorout, refout>(ret);
         return ret;
     }();
     static constexpr auto fast_2 = [] () {
         T ret = 0;
         ret = crc_fast_init<T, init>();
-        ret = crc_fast_feed<T, poly, refin>(ret, test_data_bytes, test_part);
-        ret = crc_fast_feed<T, poly, refin>(ret, test_data_bytes + test_part, test_size - test_part);
+        ret = crc_fast_feed<T, poly, refin>(ret, {test_data_bytes, test_part});
+        ret = crc_fast_feed<T, poly, refin>(ret, {test_data_bytes + test_part, test_size - test_part});
         ret = crc_fast_stop<T, xorout, refout>(ret);
         return ret;
     }();
@@ -40,25 +40,30 @@ auto check_fast_and_slow_constexpr(T exp)
 template<class T, T poly, T init, T xorout, bool refin, bool refout>
 auto check_fast_and_slow(T exp)
 {
-    EXPECT_EQ(exp, (crc_slow<T, poly, init, xorout, refin, refout>(test_data, test_size)));
-    EXPECT_EQ(exp, (crc_fast<T, poly, init, xorout, refin, refout>(test_data, test_size)));
+    auto slow_1 = crc_slow<T, poly, init, xorout, refin, refout>({test_data, test_size});
+    auto fast_1 = crc_fast<T, poly, init, xorout, refin, refout>({test_data, test_size});
+    auto slow_2 = [] () {
+        T ret = 0;
+        ret = crc_slow_init<T, init>();
+        ret = crc_slow_feed<T, poly, refin>(ret, {test_data, test_part});
+        ret = crc_slow_feed<T, poly, refin>(ret, {test_data + test_part, test_size - test_part});
+        ret = crc_slow_stop<T, xorout, refout>(ret);
+        return ret;
+    }();
+    auto fast_2 = [] () {
+        T ret = 0;
+        ret = crc_fast_init<T, init>();
+        ret = crc_fast_feed<T, poly, refin>(ret, {test_data, test_part});
+        ret = crc_fast_feed<T, poly, refin>(ret, {test_data + test_part, test_size - test_part});
+        ret = crc_fast_stop<T, xorout, refout>(ret);
+        return ret;
+    }();
 
-    T ret = 0;
-
-    ret = crc_slow_init<T, init>();
-    ret = crc_slow_feed<T, poly, refin>(ret, test_data, test_part);
-    ret = crc_slow_feed<T, poly, refin>(ret, test_data + test_part, test_size - test_part);
-    ret = crc_slow_stop<T, xorout, refout>(ret);
-
-    EXPECT_EQ(exp, ret);
-
-    ret = crc_fast_init<T, init>();
-    ret = crc_fast_feed<T, poly, refin>(ret, test_data, test_part);
-    ret = crc_fast_feed<T, poly, refin>(ret, test_data + test_part, test_size - test_part);
-    ret = crc_fast_stop<T, xorout, refout>(ret);
-
-    EXPECT_EQ(exp, ret);
-
+    ASSERT_EQ(exp, slow_1);
+    ASSERT_EQ(exp, slow_2);
+    ASSERT_EQ(exp, fast_1);
+    ASSERT_EQ(exp, fast_2);
+    
     check_fast_and_slow_constexpr<T, poly, init, xorout, refin, refout>(exp);
 }
 

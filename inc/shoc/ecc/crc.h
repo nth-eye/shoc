@@ -74,18 +74,15 @@ constexpr T crc_slow_init()
  * @tparam refin Reflect input bytes
  * @param val Running CRC value
  * @param data Data to calculate CRC on
- * @param size Data size in bytes
  * @return CRC value
  */
 template<class T, T poly, bool refin>
-constexpr T crc_slow_feed(T val, const void* data, size_t size)
+constexpr T crc_slow_feed(T val, span_i<> data)
 {
     constexpr int bits = sizeof(T) * 8;
     constexpr T topbit = T(1) << (bits - 1);
-    auto p = static_cast<const byte*>(data);
 
-    while (size--) {
-        auto b = *p++;
+    for (auto b : data) {
         if constexpr (refin)
             b = bitswap(b);
         val ^= T(b) << (bits - 8);
@@ -124,13 +121,12 @@ constexpr T crc_slow_stop(T val)
  * @tparam refin Reflect input bytes
  * @tparam refout Reflect output value
  * @param data Data to calculate CRC on
- * @param size Data size in bytes
  * @return CRC value
  */
 template<class T, T poly, T init, T xorout, bool refin, bool refout>
-constexpr T crc_slow(const void* data, size_t size)
+constexpr T crc_slow(span_i<> data)
 {
-    auto val = crc_slow_feed<T, poly, refin>(init, data, size);
+    auto val = crc_slow_feed<T, poly, refin>(init, data);
     return crc_slow_stop<T, xorout, refout>(val);
 }
 
@@ -160,16 +156,12 @@ constexpr T crc_fast_init()
  * @tparam refin Reflect input bytes
  * @param val Running CRC value
  * @param data Data to calculate CRC on
- * @param size Data size in bytes
  * @return CRC value
  */
 template<class T, T poly, bool refin>
-constexpr T crc_fast_feed(T val, const void* data, size_t size)
+constexpr T crc_fast_feed(T val, span_i<> data)
 {
-    auto p = static_cast<const byte*>(data);
-
-    while (size--) {
-        byte b = *p++;
+    for (auto b : data) {
         if constexpr (!refin)
             b = bitswap(b);
         val = impl::crc::table<T, poly>::_[(val ^ b) & 0xff] ^ (val >> 8);
@@ -206,13 +198,12 @@ constexpr T crc_fast_stop(T val)
  * @tparam refin Reflect input bytes
  * @tparam refout Reflect output value
  * @param data Data to calculate CRC on
- * @param size Data size in bytes
  * @return CRC value
  */
 template<class T, T poly, T init, T xorout, bool refin, bool refout>
-constexpr T crc_fast(const void* data, size_t size)
+constexpr T crc_fast(span_i<> data)
 {
-    auto val = crc_fast_feed<T, poly, refin>(bitswap(init), data, size);
+    auto val = crc_fast_feed<T, poly, refin>(bitswap(init), data);
     return crc_fast_stop<T, xorout, refout>(val);
 }
 

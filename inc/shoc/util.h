@@ -17,22 +17,25 @@ using utl::countof;
 using byte = uint8_t;
 
 /**
- * @brief Input (const) span.
+ * @brief Input (const) span of bytes.
  * 
  * @tparam N Size
- * @tparam T Type
  */
-template<size_t N = std::dynamic_extent, class T = byte>
-using span_i = std::span<const T, N>;
+template<size_t N = std::dynamic_extent>
+struct span_i : std::span<const byte, N> {
+    using base = std::span<const byte, N>;
+    using base::base;
+    span_i(const void* str, size_t len) : base{reinterpret_cast<const byte*>(str), len} {}
+    span_i(std::string_view str) : base{reinterpret_cast<const byte*>(str.data()), str.size()} {}
+};
 
 /**
- * @brief Output (non-const) span.
+ * @brief Output (non-const) span of bytes.
  * 
  * @tparam N Size
- * @tparam T Type
  */
-template<size_t N = std::dynamic_extent, class T = byte>
-using span_o = std::span<T, N>;
+template<size_t N = std::dynamic_extent>
+using span_o = std::span<byte, N>;
 
 /**
  * @brief Rotate bits of an integer to left.
@@ -81,7 +84,7 @@ constexpr bool little_endian()
 // }
 
 template<class T>
-constexpr void copy(T* dst, const T *src, size_t cnt)
+constexpr void copy(T* dst, const T* src, size_t cnt)
 {
     std::copy(src, src + cnt, dst);
 }
@@ -235,10 +238,6 @@ template<class H, size_t N>
 struct consumer {
     static constexpr auto hash_size = N;
 public:
-    constexpr void operator()(const void* in, size_t len, span_o<hash_size> out)
-    {
-        operator()({static_cast<const byte*>(in), len}, out);
-    }
     constexpr void operator()(span_i<> in, span_o<hash_size> out)
     {
         impl()->init();

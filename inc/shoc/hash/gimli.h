@@ -60,28 +60,53 @@ constexpr void gimli::wipe()
 
 constexpr void gimli::step()
 {
-    word x, y, z;
+    auto step_impl = [](decltype(state32)& buf) {
+        word x, y, z;
+        for (int r = 24; r > 0; --r) {
+            for (int c = 0; c < 4; ++c) {
+                x = rol(buf[0][c], 24);
+                y = rol(buf[1][c], 9);
+                z =     buf[2][c];
+                buf[2][c] = x ^ (z << 1) ^ ((y & z) << 2);
+                buf[1][c] = x ^ y ^ ((x | z) << 1);
+                buf[0][c] = y ^ z ^ ((x & y) << 3);
+            }
+            switch (r & 3) {
+                case 2:
+                    swap(buf[0][0], buf[0][2]);
+                    swap(buf[0][1], buf[0][3]);
+                    break;
+                case 0:
+                    swap(buf[0][0], buf[0][1]);
+                    swap(buf[0][2], buf[0][3]);
+                    buf[0][0] ^= 0x9e377900 | r;
+            }
+        }
+    };
 
-    for (int r = 24; r > 0; --r) {
-        for (int c = 0; c < 4; ++c) {
-            x = rol(state32[0][c], 24);
-            y = rol(state32[1][c], 9);
-            z =     state32[2][c];
-            state32[2][c] = x ^ (z << 1) ^ ((y & z) << 2);
-            state32[1][c] = x ^ y ^ ((x | z) << 1);
-            state32[0][c] = y ^ z ^ ((x & y) << 3);
+    if (std::is_constant_evaluated()) {
+        decltype(state32) tmp;
+        for (size_t i = 0; i < 3; ++i) {
+            for (size_t j = 0; j < 4; ++j) {
+                tmp[i][j] = 
+                    word(state8[i * 16 + j * 4 + 0] <<  0) | 
+                    word(state8[i * 16 + j * 4 + 1] <<  8) | 
+                    word(state8[i * 16 + j * 4 + 2] << 16) | 
+                    word(state8[i * 16 + j * 4 + 3] << 24);
+            }
         }
-        switch (r & 3) {
-            case 2:
-                swap(state32[0][0], state32[0][2]);
-                swap(state32[0][1], state32[0][3]);
-                break;
-            case 0:
-                swap(state32[0][0], state32[0][1]);
-                swap(state32[0][2], state32[0][3]);
-                state32[0][0] ^= 0x9e377900 | r;
+        step_impl(tmp);
+        for (size_t i = 0; i < 3; ++i) {
+            for (size_t j = 0; j < 4; ++j) {
+                state8[i * 16 + j * 4 + 0] = (tmp[i][j] >>  0) & 0xff;
+                state8[i * 16 + j * 4 + 1] = (tmp[i][j] >>  8) & 0xff;
+                state8[i * 16 + j * 4 + 2] = (tmp[i][j] >> 16) & 0xff;
+                state8[i * 16 + j * 4 + 3] = (tmp[i][j] >> 24) & 0xff;
+            }
         }
+        return;
     }
+    step_impl(state32);
 }
 
 }

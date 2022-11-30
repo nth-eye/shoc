@@ -13,14 +13,7 @@ Software-Header-Only-Crypto library in C++.
     - [ ] xoodoo family algorithms
     - [x] cipher
     - [x] ecc
-    - [ ] hash
-        - [x] gimli
-        - [x] md2
-        - [x] md4
-        - [x] md5
-        - [x] sha1
-        - [x] sha2
-        - [ ] sha3
+    - [x] hash
     - [ ] kdf
         - [ ] hkdf
     - [ ] mac
@@ -30,18 +23,13 @@ Software-Header-Only-Crypto library in C++.
 - [ ] tests
     - [x] cipher
     - [x] ecc
-    - [ ] hash
-        - [ ] constexpr
-        - [x] gimli
-        - [x] md2
-        - [x] md4
-        - [x] md5
-        - [x] sha1
-        - [x] sha2
-        - [ ] sha3
+    - [x] hash
     - [ ] kdf
         - [ ] hkdf
-    - [ ]
+    - [ ] mac
+        - [ ] cbc_mac
+        - [ ] gmac
+        - [ ] hmac
 - [ ] readme
     - [ ] intro
     - [ ] guide

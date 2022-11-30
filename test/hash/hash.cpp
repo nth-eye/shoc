@@ -23,10 +23,27 @@ void check(const pair (&test)[N])
     char str[Hash::hash_size * 2 + 1] = {};
 
     for (auto it : test) {
-        hash(it.msg.data(), it.msg.size(), bin);
+        hash(it.msg, bin);
         utl::bin_to_cstr(bin, sizeof(bin), str, sizeof(str));
-        EXPECT_STREQ(it.exp.data(), str);
+        ASSERT_STREQ(it.exp.data(), str);
     }
+}
+
+template<class H>
+constexpr auto ce_gen(span_i<> msg)
+{
+    H hash;
+    std::array<byte, H::hash_size> arr{};
+    hash(msg, arr);
+    return arr;
+}
+
+template<size_t N>
+void ce_check(std::array<byte, N> bin, std::string_view exp)
+{
+    char str[N * 2 + 1] = {};
+    utl::bin_to_cstr(bin.data(), bin.size(), str, sizeof(str));
+    ASSERT_STREQ(exp.data(), str);
 }
 
 }
@@ -97,10 +114,10 @@ TEST(Hash, Md5)
 TEST(Hash, Sha1)
 {
     const pair test[] = {
-        { "abc",
-            "a9993e364706816aba3e25717850c26c9cd0d89d" },
         { "",
             "da39a3ee5e6b4b0d3255bfef95601890afd80709" },
+        { "abc",
+            "a9993e364706816aba3e25717850c26c9cd0d89d" },
         { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
             "84983e441c3bd26ebaae4aa1f95129e5e54670f1" },
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
@@ -216,8 +233,40 @@ TEST(Hash, Gimli)
             "8887a5367d961d6734ee1a0d4aee09caca7fd6b606096ff69d8ce7b9a496cd2f" },
         { "",
             "b0634b2c0b082aedc5c0a2fe4ee3adcfc989ec05de6f00addb04b3aaac271f67" },
+        { "abc",
+            "7748eb235c37a43a02b8dc64faaa4bd23f054f94e52a3d8dcbb4ee85d7840ef3" },
     };
     check<gimli>(test);
+}
+
+TEST(Hash, Constexpr)
+{
+    static constexpr byte msg[]     = "abc";
+    static constexpr auto msg_view  = span_i{msg, sizeof(msg) - 1};
+
+    static constexpr auto ret_md2           = ce_gen<md2>(msg_view);
+    static constexpr auto ret_md4           = ce_gen<md4>(msg_view);
+    static constexpr auto ret_md5           = ce_gen<md5>(msg_view);
+    static constexpr auto ret_sha1          = ce_gen<sha1>(msg_view);
+    static constexpr auto ret_sha224        = ce_gen<sha224>(msg_view);
+    static constexpr auto ret_sha256        = ce_gen<sha256>(msg_view);
+    static constexpr auto ret_sha384        = ce_gen<sha384>(msg_view);
+    static constexpr auto ret_sha512        = ce_gen<sha512>(msg_view);
+    static constexpr auto ret_sha512_224    = ce_gen<sha512_224>(msg_view);
+    static constexpr auto ret_sha512_256    = ce_gen<sha512_256>(msg_view);
+    static constexpr auto ret_gimli         = ce_gen<gimli>(msg_view);
+
+    ce_check(ret_md2,           "da853b0d3f88d99b30283a69e6ded6bb");
+    ce_check(ret_md4,           "a448017aaf21d8525fc10ae87aa6729d");
+    ce_check(ret_md5,           "900150983cd24fb0d6963f7d28e17f72");
+    ce_check(ret_sha1,          "a9993e364706816aba3e25717850c26c9cd0d89d");
+    ce_check(ret_sha224,        "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7");
+    ce_check(ret_sha256,        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    ce_check(ret_sha384,        "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7");
+    ce_check(ret_sha512,        "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f");
+    ce_check(ret_sha512_224,    "4634270f707b6a54daae7530460842e20e37ed265ceee9a43e8924aa");
+    ce_check(ret_sha512_256,    "53048e2681941ef99b2e29b76b4c7dabe4c2d0c634fc6d46e0e2f13107e7af23");
+    ce_check(ret_gimli,         "7748eb235c37a43a02b8dc64faaa4bd23f054f94e52a3d8dcbb4ee85d7840ef3");
 }
 
 }

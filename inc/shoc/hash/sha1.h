@@ -106,7 +106,7 @@ constexpr void sha1::step()
     word w[80];
     word var[state_size];
     
-    copy(var, state, sizeof(state));
+    copy(var, state, countof(state));
 
     for (size_t t = 0; t < 16; ++t) {
         w[t]  = block[t * 4]     << 24;

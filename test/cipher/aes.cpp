@@ -74,8 +74,8 @@ TEST(Cipher, AesConstexpr)
         cipher.decrypt(enc, dec);
         return std::pair{enc, dec};
     }();
-    compare(span_i{out.first}, span_i{exp});
-    compare(span_i{out.second}, span_i{msg});
+    compare(out.first, exp);
+    compare(out.second, msg);
 }
 
 }
