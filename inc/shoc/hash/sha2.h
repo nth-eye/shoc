@@ -178,15 +178,15 @@ constexpr void context<T>::step()
 
     constexpr size_t buf_size = T & word64_flag ? 80 : 64;
 
-    word w[buf_size];
+    word buf[buf_size];
     word var[state_size];
     copy(var, state, state_size);
 
     auto round = [&] (const auto& table) {
         for (size_t t = 16; t < buf_size; ++t)
-            w[t] = sigma_1(w[t-2]) + w[t-7] + sigma_0(w[t-15]) + w[t-16];
+            buf[t] = sigma_1(buf[t-2]) + buf[t-7] + sigma_0(buf[t-15]) + buf[t-16];
         for (size_t t = 0; t < buf_size; ++t) {
-            word tmp1 = var[h] + sum_1(var[e]) + ch(var[e], var[f], var[g]) + table[t] + w[t];
+            word tmp1 = var[h] + sum_1(var[e]) + ch(var[e], var[f], var[g]) + table[t] + buf[t];
             word tmp2 = sum_0(var[a]) + maj(var[a], var[b], var[c]);
             var[h] = var[g];
             var[g] = var[f];
@@ -201,22 +201,22 @@ constexpr void context<T>::step()
 
     if constexpr (T & word64_flag) {
         for (size_t t = 0; t < 16; ++t) {
-            w[t]  = word(block[t * 8])     << 56;
-            w[t] |= word(block[t * 8 + 1]) << 48;
-            w[t] |= word(block[t * 8 + 2]) << 40;
-            w[t] |= word(block[t * 8 + 3]) << 32;
-            w[t] |= word(block[t * 8 + 4]) << 24;
-            w[t] |= word(block[t * 8 + 5]) << 16;
-            w[t] |= word(block[t * 8 + 6]) << 8;
-            w[t] |= word(block[t * 8 + 7]);
+            buf[t]  = word(block[t * 8])     << 56;
+            buf[t] |= word(block[t * 8 + 1]) << 48;
+            buf[t] |= word(block[t * 8 + 2]) << 40;
+            buf[t] |= word(block[t * 8 + 3]) << 32;
+            buf[t] |= word(block[t * 8 + 4]) << 24;
+            buf[t] |= word(block[t * 8 + 5]) << 16;
+            buf[t] |= word(block[t * 8 + 6]) << 8;
+            buf[t] |= word(block[t * 8 + 7]);
         }
         round(round_table_64);
     } else {
         for (size_t t = 0; t < 16; ++t) {
-            w[t]  = block[t * 4]     << 24;
-            w[t] |= block[t * 4 + 1] << 16;
-            w[t] |= block[t * 4 + 2] << 8;
-            w[t] |= block[t * 4 + 3];
+            buf[t]  = block[t * 4]     << 24;
+            buf[t] |= block[t * 4 + 1] << 16;
+            buf[t] |= block[t * 4 + 2] << 8;
+            buf[t] |= block[t * 4 + 3];
         }
         round(round_table_32);
     }
@@ -225,6 +225,8 @@ constexpr void context<T>::step()
         state[i] += var[i];
 
     block_idx = 0;
+
+    zero(buf, countof(buf));
 }
 
 }

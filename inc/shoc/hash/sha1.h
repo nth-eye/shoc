@@ -103,29 +103,31 @@ constexpr void sha1::pad()
 
 constexpr void sha1::step()
 {
-    word w[80];
+    word buf[80];
     word var[state_size];
     
     copy(var, state, countof(state));
 
     for (size_t t = 0; t < 16; ++t) {
-        w[t]  = block[t * 4]     << 24;
-        w[t] |= block[t * 4 + 1] << 16;
-        w[t] |= block[t * 4 + 2] << 8;
-        w[t] |= block[t * 4 + 3];
+        buf[t]  = block[t * 4]     << 24;
+        buf[t] |= block[t * 4 + 1] << 16;
+        buf[t] |= block[t * 4 + 2] << 8;
+        buf[t] |= block[t * 4 + 3];
     }
     for (size_t t = 16; t < 80; ++t)
-        w[t] = rol(w[t-3] ^ w[t-8] ^ w[t-14] ^ w[t-16], 1);
+        buf[t] = rol(buf[t-3] ^ buf[t-8] ^ buf[t-14] ^ buf[t-16], 1);
 
-    round<0,  20, 0x5a827999, ch>(w, var);
-    round<20, 40, 0x6ed9eba1, parity>(w, var);
-    round<40, 60, 0x8f1bbcdc, maj>(w, var);
-    round<60, 80, 0xca62c1d6, parity>(w, var);
+    round<0,  20, 0x5a827999, ch>(buf, var);
+    round<20, 40, 0x6ed9eba1, parity>(buf, var);
+    round<40, 60, 0x8f1bbcdc, maj>(buf, var);
+    round<60, 80, 0xca62c1d6, parity>(buf, var);
 
     for (size_t i = 0; i < state_size; ++i)
         state[i] += var[i];
 
     block_idx = 0;
+
+    zero(buf, countof(buf));
 }
 
 }

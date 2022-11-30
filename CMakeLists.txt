@@ -17,7 +17,7 @@ add_executable(testshoc
     test/ecc/crc.cpp
     test/hash/hash.cpp
     # test/kdf/hkdf.cpp
-    # test/mac/hmac.cpp
+    test/mac/hmac.cpp
     # test/mode/mode.cpp
     # test/otp/hotp.cpp
     # test/elliptic.cpp
