@@ -6,7 +6,7 @@
 namespace shoc {
 
 template<class H>
-constexpr void hmac(span_i<> msg, span_i<> key, span_o<H::hash_size> digest)
+constexpr void hmac(span_i<> key, span_i<> msg, span_o<H::hash_size> digest)
 {
     H hash;
     byte k_ipad[H::block_size] = {};
@@ -21,7 +21,7 @@ constexpr void hmac(span_i<> msg, span_i<> key, span_o<H::hash_size> digest)
         hash.feed(key);
         hash.stop(tk);
         key_ptr = tk;
-        key_len = H::hash_size;
+        key_len = sizeof(tk);
     }
     copy(k_ipad, key_ptr, key_len);
     copy(k_opad, key_ptr, key_len);
@@ -40,66 +40,64 @@ constexpr void hmac(span_i<> msg, span_i<> key, span_o<H::hash_size> digest)
     hash.stop(digest);
 }
 
-// template<class H>
-// struct Hmac {
-//     void init(const void *key, size_t key_len);
-//     void feed(const void *msg, size_t msg_len);
-//     void stop(byte *out);
-//     void operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, byte *out);
-// private:
-//     H hash;
-//     byte k_pad[H::block_size];
-//     byte tk[H::SIZE];
-// };
+template<class H>
+struct hmac_ctx : consumer<hmac_ctx<H>, H::hash_size> {
+    constexpr void init(span_i<> key);
+    constexpr void feed(span_i<> msg);
+    constexpr void stop(span_o<H::hash_size> out);
+    constexpr void wipe();
+private:
+    H hash;
+    byte k_pad[H::block_size];
+};
 
-// template<class H>
-// void Hmac<H>::init(const void *key, size_t key_len)
-// {
-//     if (key_len > H::block_size) {
+template<class H>
+constexpr void hmac_ctx<H>::init(span_i<> key)
+{
+    auto key_ptr = key.data();
+    auto key_len = key.size();
+    byte tk[H::hash_size];
 
-//         hash.init();
-//         hash.feed(key, key_len);
-//         hash.stop(tk);
+    if (key_len > H::block_size) {
+        hash.init();
+        hash.feed(key);
+        hash.stop(tk);
+        key_ptr = tk;
+        key_len = sizeof(tk);
+    }
+    zero(k_pad, sizeof(k_pad));
+    copy(k_pad, key_ptr, key_len);
+    xorb(k_pad, 0x36);
 
-//         key = tk;
-//         key_len = H::SIZE;
-//     }
+    hash.init();
+    hash.feed(k_pad);
 
-//     fill(k_pad, 0, sizeof(k_pad));
-//     copy(k_pad, key, key_len);
-//     for (auto &it : k_pad)
-//         it ^= 0x36;
+    zero(k_pad, sizeof(k_pad));
+    copy(k_pad, key_ptr, key_len);
+    xorb(k_pad, 0x5c);
+}
 
-//     hash.init();
-//     hash.feed(k_pad, sizeof(k_pad));
+template<class H>
+constexpr void hmac_ctx<H>::feed(span_i<> msg)
+{
+    hash.feed(msg);
+}
 
-//     fill(k_pad, 0, sizeof(k_pad));
-//     copy(k_pad, key, key_len);
-//     for (auto &it : k_pad)
-//         it ^= 0x5C;
-// }
+template<class H>
+constexpr void hmac_ctx<H>::stop(span_o<H::hash_size> out)
+{
+    hash.stop(out);
+    hash.init();
+    hash.feed(k_pad);
+    hash.feed(out);
+    hash.stop(out);
+}
 
-// template<class H>
-// void Hmac<H>::feed(const void *msg, size_t msg_len)
-// {
-//     hash.feed(msg, msg_len);
-// }
-
-// template<class H>
-// void Hmac<H>::stop(byte *out)
-// {
-//     hash.stop(out);
-//     hash.init();
-//     hash.feed(k_pad, sizeof(k_pad));
-//     hash.feed(out, H::SIZE);
-//     hash.stop(out);
-// }
-
-// template<class H>
-// void Hmac<H>::operator()(const void *msg, size_t msg_len, const void *key, size_t key_len, byte *out)
-// {
-//     init(key, key_len), feed(msg, msg_len), stop(out);
-// }
+template<class H>
+constexpr void hmac_ctx<H>::wipe()
+{
+    zero(k_pad, sizeof(k_pad));
+}
 
 }
 

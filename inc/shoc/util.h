@@ -71,18 +71,13 @@ constexpr bool little_endian()
     return std::endian::native == std::endian::little; 
 }
 
-// /**
-//  * @brief Copy from one memory region to another.
-//  * 
-//  * @param dst Destination
-//  * @param src Source
-//  * @param cnt Number of bytes
-//  */
-// constexpr void copy(void* dst, const void *src, size_t cnt)
-// {
-//     std::copy(static_cast<const byte*>(src), static_cast<const byte*>(src) + cnt, static_cast<byte*>(dst));
-// }
-
+/**
+ * @brief Copy from one memory region to another.
+ * 
+ * @param dst Pointer to destination objects
+ * @param src Pointer to source objects
+ * @param cnt Number of objects
+ */
 template<class T>
 constexpr void copy(T* dst, const T* src, size_t cnt)
 {
@@ -109,13 +104,26 @@ constexpr void fill(byte* dst, byte val, size_t cnt)
 /**
  * @brief Reliably zero out memory region.
  * 
- * @param dst Pointer to object to zero out
+ * @param dst Pointer to objects to zero out
  * @param cnt Number of objects
  */
 template<class T>
 constexpr void zero(T* dst, size_t cnt)
 {
     std::fill_n(static_cast<volatile T*>(dst), cnt, T(0));
+}
+
+/**
+ * @brief XOR block of bytes with given byte.
+ * 
+ * @param dst Destination array
+ * @param val Byte to XOR with
+ */
+template<size_t N>
+constexpr void xorb(byte (&dst)[N], byte val)
+{
+    for (size_t i = 0; i < N; ++i)
+        dst[i] ^= val;
 }
 
 /**
@@ -238,6 +246,12 @@ template<class H, size_t N>
 struct consumer {
     static constexpr auto hash_size = N;
 public:
+    constexpr void operator()(span_i<> key, span_i<> msg, span_o<hash_size> out)
+    {
+        impl()->init(key);
+        impl()->feed(msg);
+        impl()->stop(out);
+    }
     constexpr void operator()(span_i<> in, span_o<hash_size> out)
     {
         impl()->init();
@@ -249,6 +263,8 @@ private:
     constexpr auto impl()   { return static_cast<H*>(this); }
     friend H;
 };
+
+
 
 }
 

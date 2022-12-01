@@ -1,30 +1,27 @@
-#include <gtest/gtest.h>
-#include <span>
+#include "test.h"
 #include "shoc/kdf/hkdf.h"
 #include "shoc/hash/sha2.h"
 
-using namespace shoc;
+namespace shoc {
+namespace {
 
-struct Data {
-    const std::span<const uint8_t> ikm;
-    const std::span<const uint8_t> salt;
-    const std::span<const uint8_t> info;
-    const std::span<const uint8_t> exp;
-    const std::span<uint8_t> out;
+struct data {
+    span_i<> ikm;
+    span_i<> salt;
+    span_i<> info;
+    span_i<> exp;
+    span_o<> out;
 };
 
 template<class H, size_t N>
-void hkdf_check(const Data (&test)[N])
+void hkdf_check(const data (&test)[N])
 {
     for (auto it : test) {
-        hkdf<H>(
-            it.out.data(), it.out.size(),
-            it.ikm.data(), it.ikm.size(),
-            it.salt.data(), it.salt.size(),
-            it.info.data(), it.info.size());
-        for (size_t i = 0; i < it.out.size(); ++i)
-            ASSERT_EQ(it.out[i], it.exp[i]) << "At index " << i;
+        hkdf<H>(it.out, it.ikm, it.salt, it.info);
+        compare(it.out, it.exp);
     }
+}
+
 }
 
 TEST(Hkdf, Sha256)
@@ -70,9 +67,11 @@ TEST(Hkdf, Sha256)
             0xcc, 0x30, 0xc5, 0x81, 0x79, 0xec, 0x3e, 0x87, 0xc1, 0x4c, 0x01, 0xd5, 0xc1, 0xf3, 0x43, 0x4f,
             0x1d, 0x87  },
     };
-    const Data test[] = {
+    const data test[] = {
         { {ikm[0], 22}, {salt[0], 13}, {info[0], 10}, {exp[0], 42}, {out[0], 42}  },
         { {ikm[1], 80}, {salt[1], 80}, {info[1], 80}, {exp[1], 82}, {out[1], 82}  },
     };
-    hkdf_check<Sha2<SHA_256>>(test);
+    hkdf_check<sha256>(test);
+}
+
 }

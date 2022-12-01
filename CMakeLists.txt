@@ -16,10 +16,10 @@ add_executable(testshoc
     test/cipher/aes.cpp
     test/ecc/crc.cpp
     test/hash/hash.cpp
-    # test/kdf/hkdf.cpp
+    test/kdf/hkdf.cpp
     test/mac/hmac.cpp
-    # test/mode/mode.cpp
-    # test/otp/hotp.cpp
+    test/mode/mode.cpp
+    test/otp/hotp.cpp
     # test/elliptic.cpp
     )
 target_include_directories(testshoc PRIVATE test)

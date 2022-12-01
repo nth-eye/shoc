@@ -14,22 +14,27 @@ Software-Header-Only-Crypto library in C++.
     - [x] cipher
     - [x] ecc
     - [x] hash
-    - [ ] kdf
-        - [ ] hkdf
+    - [x] kdf
     - [ ] mac
         - [ ] cbc_mac
         - [ ] gmac
-        - [ ] hmac
+        - [x] hmac
+    - [ ] mode
+    - [x] otp
 - [ ] tests
     - [x] cipher
     - [x] ecc
     - [x] hash
     - [ ] kdf
         - [ ] hkdf
+            - [ ] constexpr
     - [ ] mac
         - [ ] cbc_mac
         - [ ] gmac
         - [ ] hmac
+            - [ ] constexpr
+    - [ ] mode
+    - [x] otp
 - [ ] readme
     - [ ] intro
     - [ ] guide
