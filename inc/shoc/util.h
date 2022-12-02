@@ -132,9 +132,9 @@ constexpr void xorb(byte (&dst)[N], byte val)
  * 
  * @param x Destination array
  * @param y Another array
- * @param len Length of a block in bytes, default if 16
+ * @param len Length of a block in bytes
  */
-constexpr void xorb(byte *x, const byte *y, size_t len = 16)
+constexpr void xorb(byte* x, const byte* y, size_t len)
 {
     for (size_t i = 0; i < len; ++i)
         x[i] ^= y[i];
@@ -236,7 +236,7 @@ constexpr T parity(T x, T y, T z)
  * @param block Pointer to the beginning of a block, not counter
  */
 template<size_t L = 4, size_t B = 16>
-constexpr void incc(byte *block)
+constexpr void incc(byte* block)
 {
     size_t i = B;
     while (++block[--i] == 0 && i >= B - L);

@@ -7,7 +7,7 @@ namespace shoc {
 
 /**
  * @brief Encrypt with block cipher in output feedback mode.
- * All pointers MUST be valid.
+ * All pointers MUST be valid. Text length can be arbitrary.
  * 
  * @tparam E Block cipher
  * @param key Key
@@ -17,16 +17,15 @@ namespace shoc {
  * @param len Text length
  */
 template<class E>
-inline void ofb_encrypt(const byte *key, const byte *iv, const byte *in, byte *out, size_t len)
+constexpr void ofb_encrypt(span_i<E::key_size> key, span_i<E::block_size> iv, const byte* in, byte* out, size_t len)
 {
     E ciph {key};
-
-    byte buf[16];
-    copy(buf, iv, 16);
+    byte buf[E::block_size];
+    copy(buf, iv.data(), iv.size());
 
     for (size_t i = 0; i < len; ++i) {
-        size_t idx = i & 0xf;
-        if (idx == 0) 
+        auto idx = i % sizeof(buf);
+        if (!idx) 
             ciph.encrypt(buf, buf);
         *out++ = buf[idx] ^ *in++;
     }
@@ -34,7 +33,7 @@ inline void ofb_encrypt(const byte *key, const byte *iv, const byte *in, byte *o
 
 /**
  * @brief Decrypt with block cipher in output feedback mode. 
- * All pointers MUST be valid.
+ * All pointers MUST be valid. Text length can be arbitrary.
  * 
  * @tparam E Block cipher
  * @param key Key
@@ -44,7 +43,7 @@ inline void ofb_encrypt(const byte *key, const byte *iv, const byte *in, byte *o
  * @param len Text length
  */
 template<class E>
-inline void ofb_decrypt(const byte *key, const byte *iv, const byte *in, byte *out, size_t len)
+constexpr void ofb_decrypt(span_i<E::key_size> key, span_i<E::block_size> iv, const byte* in, byte* out, size_t len)
 {
     ofb_encrypt<E>(key, iv, in, out, len);
 }

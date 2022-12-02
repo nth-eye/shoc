@@ -18,17 +18,17 @@ namespace shoc {
  * @param ciph Cipher object, must be already initialized
  */
 template<class E, size_t L = 4>
-inline void ctrf(const byte *iv, const byte *in, byte *out, size_t len, E &ciph)
+constexpr void ctrf(span_i<E::block_size> iv, const byte* in, byte* out, size_t len, E& ciph)
 {
-    byte buf[16];
-    byte ctr[16];
-    copy(ctr, iv, 16);
+    byte buf[E::block_size];
+    byte ctr[E::block_size];
+    copy(ctr, iv.data(), iv.size());
 
     for (size_t i = 0; i < len; ++i) {
-        size_t idx = i & 0xf;
-        if (idx == 0) {
+        auto idx = i % sizeof(buf);
+        if (!idx) {
             ciph.encrypt(ctr, buf);
-            incc<L>(ctr);
+            incc<L, E::block_size>(ctr);
         }
         *out++ = buf[idx] ^ *in++;
     }
@@ -36,7 +36,7 @@ inline void ctrf(const byte *iv, const byte *in, byte *out, size_t len, E &ciph)
 
 /**
  * @brief Encrypt with block cipher in counter mode. Number of counter-bytes is configurable.
- * All pointers MUST be valid.
+ * All pointers MUST be valid. Text length can be arbitrary.
  * 
  * @tparam E Block cipher
  * @tparam L Counter size, default is 4 
@@ -47,7 +47,7 @@ inline void ctrf(const byte *iv, const byte *in, byte *out, size_t len, E &ciph)
  * @param len Text length
  */
 template<class E, size_t L = 4>
-inline void ctr_encrypt(const byte *key, const byte *iv, const byte *in, byte *out, size_t len)
+constexpr void ctr_encrypt(span_i<E::key_size> key, span_i<E::block_size> iv, const byte* in, byte* out, size_t len)
 {
     E ciph {key};
     ctrf<E, L>(iv, in, out, len, ciph);   
@@ -55,7 +55,7 @@ inline void ctr_encrypt(const byte *key, const byte *iv, const byte *in, byte *o
 
 /**
  * @brief Decrypt with block cipher in counter mode. Number of counter-bytes is configurable.
- * All pointers MUST be valid.
+ * All pointers MUST be valid. Text length can be arbitrary.
  * 
  * @tparam E Block cipher
  * @tparam L Counter size, default is 4 
@@ -66,7 +66,7 @@ inline void ctr_encrypt(const byte *key, const byte *iv, const byte *in, byte *o
  * @param len Text length
  */
 template<class E, size_t L = 4>
-inline void ctr_decrypt(const byte *key, const byte *iv, const byte *in, byte *out, size_t len)
+constexpr void ctr_decrypt(span_i<E::key_size> key, span_i<E::block_size> iv, const byte* in, byte* out, size_t len)
 {
     ctr_encrypt<E, L>(key, iv, in, out, len);
 }

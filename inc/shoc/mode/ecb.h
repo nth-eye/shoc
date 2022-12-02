@@ -7,8 +7,8 @@ namespace shoc {
 
 /**
  * @brief Encrypt with block cipher in electronic codebook mode. All 
- * pointers MUST be valid. Text length can be arbitrary, but will be 
- * padded with zeros if not multiple of E::block_size.
+ * pointers MUST be valid. Text length MUST be multiple of E::block_size, 
+ * otherwise last block will be processed with previous block remainder.
  * 
  * @tparam E Block cipher
  * @param key Key
@@ -20,9 +20,9 @@ template<class E>
 constexpr void ecb_encrypt(span_i<E::key_size> key, const byte* in, byte* out, size_t len)
 {
     E ciph {key};
+    byte buf[E::block_size];
 
     for (size_t i = 0; i < len;) {
-        byte buf[E::block_size]{};
         auto block_len = std::min(len - i, sizeof(buf));
         copy(buf, in + i, block_len);
         ciph.encrypt(buf, buf);
@@ -33,8 +33,8 @@ constexpr void ecb_encrypt(span_i<E::key_size> key, const byte* in, byte* out, s
 
 /**
  * @brief Decrypt with block cipher in electronic codebook mode. All 
- * pointers MUST be valid. Text length can be arbitrary, but will be 
- * padded with zeros if not multiple of E::block_size.
+ * pointers MUST be valid. Text length MUST be multiple of E::block_size, 
+ * otherwise last block will be processed with previous block remainder.
  * 
  * @tparam E Block cipher
  * @param key Key
@@ -43,12 +43,12 @@ constexpr void ecb_encrypt(span_i<E::key_size> key, const byte* in, byte* out, s
  * @param len Text length
  */
 template<class E>
-constexpr void ecb_decrypt(span_i<E::key_size> key, const byte *in, byte *out, size_t len)
+constexpr void ecb_decrypt(span_i<E::key_size> key, const byte* in, byte* out, size_t len)
 {
     E ciph {key};
+    byte buf[E::block_size];
 
     for (size_t i = 0; i < len;) {
-        byte buf[E::block_size]{};
         auto block_len = std::min(len - i, sizeof(buf));
         copy(buf, in + i, block_len);
         ciph.decrypt(buf, buf);

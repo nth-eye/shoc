@@ -6,58 +6,61 @@
 namespace shoc {
 
 /**
- * @brief Encrypt with block cipher in cipher block chaining mode.
- * All pointers MUST be valid and length is multiple of 16.
+ * @brief Encrypt with block cipher in cipher block chaining mode. All 
+ * pointers MUST be valid. Text length MUST be multiple of E::block_size, 
+ * otherwise last block be processed with previous block remainder.
  * 
  * @tparam E Block cipher
  * @param key Key
  * @param iv Initial vector
  * @param in Plain text
  * @param out Cipher text
- * @param len Text length, multiple of 16
+ * @param len Text length
  */
 template<class E>
-inline void cbc_encrypt(const byte *key, const byte *iv, const byte *in, byte *out, size_t len)
+constexpr void cbc_encrypt(span_i<E::key_size> key, span_i<E::block_size> iv, const byte* in, byte* out, size_t len)
 {
     E ciph {key};
-
-    auto end = out + len;
-    byte buf[16];
-	copy(buf, iv, 16);
+    byte buf[E::block_size];
+    copy(buf, iv.data(), iv.size());
     
-    for (; out < end; out += 16, in += 16) {
-        xorb(buf, in);
+    for (size_t i = 0; i < len;) {
+        auto block_len = std::min(len - i, sizeof(buf));
+        xorb(buf, in + i, block_len);
         ciph.encrypt(buf, buf);
-        copy(out, buf, 16);
+        copy(out + i, buf, block_len);
+        i += block_len;
     }
 }
 
 /**
- * @brief Decrypt with block cipher in cipher block chaining mode.
- * All pointers MUST be valid and length is multiple of 16.
+ * @brief Decrypt with block cipher in cipher block chaining mode. All 
+ * pointers MUST be valid. Text length MUST be multiple of E::block_size, 
+ * otherwise last block will be processed with previous block remainder.
  * 
  * @tparam E Block cipher
  * @param key Key
  * @param iv Initial vector
  * @param in Cipher text
  * @param out Plain text
- * @param len Text length, multiple of 16
+ * @param len Text length
  */
 template<class E>
-inline void cbc_decrypt(const byte *key, const byte *iv, const byte *in, byte *out, size_t len)
+constexpr void cbc_decrypt(span_i<E::key_size> key, span_i<E::block_size> iv, const byte* in, byte* out, size_t len)
 {
     E ciph {key};
+    byte tmp_buf[E::block_size]{};
+    byte xor_buf[E::block_size];
+    copy(xor_buf, iv.data(), iv.size());
 
-    auto end = out + len;
-    byte xor_buf[16];
-    byte tmp_buf[16];
-	copy(xor_buf, iv, 16);
-
-    for (; out < end; out += 16, in += 16) {
-        copy(tmp_buf, in, 16);
-        ciph.decrypt(in, out);
-        xorb(out, xor_buf);
-        copy(xor_buf, tmp_buf, 16);
+    for (size_t i = 0; i < len;) {
+        auto block_len = std::min(len - i, E::block_size);
+        copy(tmp_buf, in + i, block_len);
+        ciph.decrypt(tmp_buf, tmp_buf);
+        xorb(tmp_buf, xor_buf, block_len);
+        copy(out + i, tmp_buf, block_len);
+        copy(xor_buf, in + i, block_len);
+        i += block_len;
     }
 }
 

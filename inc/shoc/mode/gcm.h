@@ -4,6 +4,7 @@
 #include "shoc/mode/ctr.h"
 
 namespace shoc {
+namespace impl::gcm {
 
 /**
  * @brief Shift bits right in array of integer elements from most significant bit
@@ -16,7 +17,7 @@ namespace shoc {
  * @param len Number of elements
  */
 template<class T, size_t L>
-constexpr void gcm_shift_right_reflected(T (&x)[L])
+constexpr void shift_right_reflected(T (&x)[L])
 {
     for (int i = L - 1; i > 0; --i) {
         x[i] >>= 1;
@@ -32,79 +33,71 @@ constexpr void gcm_shift_right_reflected(T (&x)[L])
  * @param y Second 128-bit vector multiplier
  * @param z Output 128-bit vector
  */
-inline void gmul(const byte *x, const byte *y, byte *z)
+constexpr void gmul(const byte* x, const byte* y, byte* z)
 {
     byte v[16];
 
-    zero(z, 16);
+    fill(z, 0, 16);
     copy(v, y, 16);
 
     for (int i = 0; i < 16; ++i) {
         for (int j = 7; j >= 0; --j) {
             if (utl::get_bit(x[i], j)) {
-                xorb(z, v);
+                xorb(z, v, 16);
             }
             if (utl::get_bit(v[15], 0)) {
-                gcm_shift_right_reflected(v);
+                shift_right_reflected(v);
                 v[0] ^= 0xe1;
             } else {
-                gcm_shift_right_reflected(v);
+                shift_right_reflected(v);
             }
         }
     }
 }
 
-inline void ghash(const byte *h, const byte *x, size_t x_len, byte *y)
+constexpr void ghash(const byte* h, const byte* x, size_t x_len, byte* y)
 {
     byte t[16];
     auto blocks = x_len >> 4;
     auto remain = x_len & 0xf; 
 
     for (size_t i = 0; i < blocks; ++i, x += 16) {
-        xorb(y, x);
+        xorb(y, x, 16);
         gmul(y, h, t);
         copy(y, t, 16);
     }
-
     if (remain) {
         copy(t, x, remain);
         zero(t + remain, 16 - remain);
-        xorb(y, t);
+        xorb(y, t, 16);
         gmul(y, h, t);
         copy(y, t, 16);
     }
 }
 
-inline void gcm_ghash(
-    const byte *h, 
-    const byte *aad, size_t aad_len, 
-    const byte *txt, size_t txt_len,
-    byte *out)
+constexpr void hash(
+    const byte* h, 
+    const byte* aad, size_t aad_len, 
+    const byte* txt, size_t txt_len,
+    byte* out)
 {
     // Apply GHASH to [pad(aad) + pad(ciphertext) + 64-bit(aad_len * 8), 64-bit(len * 8))]
-
     byte len[16];
-
     zero(out, 16);
-
     putbe(uint64_t(aad_len * 8), len);
     putbe(uint64_t(txt_len * 8), len + 8);
-
     ghash(h, aad, aad_len, out);
     ghash(h, txt, txt_len, out);
     ghash(h, len, 16, out);
 }
 
 template<class E>
-inline void gcm_init(const byte *iv, size_t iv_len, byte *h, byte *j0, E &ciph)
+constexpr void init(const byte* iv, size_t iv_len, byte* h, byte* j0, E& ciph)
 {
     // Init hash subkey
-
     zero(h, 16);
     ciph.encrypt(h, h);
-
     // Prepare J0
-
     zero(j0, 16);
 
     if (iv_len == 12) {
@@ -131,7 +124,7 @@ inline void gcm_init(const byte *iv, size_t iv_len, byte *h, byte *j0, E &ciph)
         // putbe(uint64_t(iv_len * 8), pad + 8);
         // ghash(h, pad, 16, j0);
 
-        byte pad[16] = {};
+        byte pad[16]{};
         putbe(uint64_t(iv_len * 8), pad + 8);
         ghash(h, iv, iv_len, j0);
         ghash(h, pad, 16, j0);
@@ -139,15 +132,26 @@ inline void gcm_init(const byte *iv, size_t iv_len, byte *h, byte *j0, E &ciph)
 }
 
 template<class E>
-inline void gcm_gctr(const byte *j0, const byte *in, byte *out, size_t len, E &ciph)
+constexpr void gctr(const byte* j0, const byte* in, byte* out, size_t len, E& ciph)
 {
     // Increment J0 and pass to GCTR
-
     byte ij0[16];
-
     copy(ij0, j0, 16);
     incc(ij0);
     ctrf(ij0, in, out, len, ciph);
+}
+
+}
+
+/**
+ * @brief Check if GCM tag length is invalid.
+ * 
+ * @param len Tag length
+ * @return true if invalid
+ */
+constexpr bool gcm_tag_length_invalid(size_t len)
+{
+    return len > 16 || len < 4  || (len < 12 && len & 3);
 }
 
 /**
@@ -158,41 +162,36 @@ inline void gcm_gctr(const byte *j0, const byte *in, byte *out, size_t len, E &c
  * @tparam E BLock cipher
  * @param key Key
  * @param iv Initial vector
- * @param iv_len Initial vector length
  * @param aad Additional authenticated data
- * @param aad_len Additional authenticated data length
  * @param tag Output tag
- * @param tag_len Output tag desired length
  * @param in Plain text
  * @param out Cipher text
  * @param len Text length
  * @return true on success, false if tag length is invalid
  */
 template<class E>
-inline bool gcm_encrypt(
-    const byte *key,
-    const byte *iv,  size_t iv_len,
-    const byte *aad, size_t aad_len,
-          byte *tag, size_t tag_len,
+constexpr bool gcm_encrypt(
+    span_i<E::key_size> key,
+    span_i<> iv,
+    span_i<> aad, 
+    span_o<> tag,
     const byte *in,
           byte *out, size_t len)
 {
-    if (tag_len > 16 || 
-        tag_len < 4  || (tag_len < 12 && tag_len & 3))
+    if (gcm_tag_length_invalid(tag.size()))
         return false;
 
     E ciph {key};
-
     byte h[16];
     byte j[16];
     byte s[16];
     byte t[16];
 
-    gcm_init(iv, iv_len, h, j, ciph);           // 1. Init hash subkey and prepare J0
-    gcm_gctr(j, in, out, len, ciph);            // 2. Increment J0 and pass to GCTR
-    gcm_ghash(h, aad, aad_len, out, len, s);    // 3. Apply GHASH to [pad(aad) + pad(ciphertext) + 64-bit(aad_len * 8), 64-bit(len * 8))]
-    ctrf(j, s, t, sizeof(t), ciph);             // 4. Generate full tag
-    copy(tag, t, tag_len);                      // 5. Truncate tag to the desired length
+    impl::gcm::init(iv, h, j, ciph);                            // 1. Init hash subkey and prepare J0
+    impl::gcm::gctr(j, in, out, len, ciph);                     // 2. Increment J0 and pass to GCTR
+    impl::gcm::hash(h, aad.data(), aad.size(), out, len, s);    // 3. Apply GHASH to [pad(aad) + pad(ciphertext) + 64-bit(aad_len * 8), 64-bit(len * 8))]
+    ctrf(j, s, t, sizeof(t), ciph);                             // 4. Generate full tag
+    copy(tag.data(), t, tag.size());                            // 5. Truncate tag to the desired length
 
     return true;
 }
@@ -205,42 +204,37 @@ inline bool gcm_encrypt(
  * @tparam E Block cipher
  * @param key Key
  * @param iv Initial vector
- * @param iv_len Initial vector length
  * @param aad Additional authenticated data
- * @param aad_len Additional authenticated data length
  * @param tag Input tag
- * @param tag_len Input tag length
  * @param in Cipher text
  * @param out Plain text
  * @param len Text length
  * @return true on success, false if tag length is invalid or authentication failed
  */
 template<class E>
-inline bool gcm_decrypt(
-    const byte *key,
-    const byte *iv,  size_t iv_len,
-    const byte *aad, size_t aad_len,
-    const byte *tag, size_t tag_len,
+constexpr bool gcm_decrypt(
+    span_i<E::key_size> key,
+    span_i<> iv,
+    span_i<> aad, 
+    span_i<> tag,
     const byte *in,
           byte *out, size_t len)
 {
-    if (tag_len > 16 || 
-        tag_len < 4  || (tag_len < 12 && tag_len & 3))
+    if (gcm_tag_length_invalid(tag.size()))
         return false;
 
     E ciph {key};
-
     byte h[16];
     byte j[16];
     byte s[16];
     byte t[16];
 
-    gcm_init(iv, iv_len, h, j, ciph);           // 1. Init hash subkey and prepare J0
-    gcm_ghash(h, aad, aad_len, in, len, s);     // 2. Apply GHASH to [pad(aad) + pad(ciphertext) + 64-bit(aad_len * 8), 64-bit(len * 8))]
-    gcm_gctr(j, in, out, len, ciph);            // 3. Increment J0 and pass to GCTR
-    ctrf(j, s, t, sizeof(t), ciph);             // 4. Generate full tag
+    impl::gcm::init(iv, h, j, ciph);                        // 1. Init hash subkey and prepare J0
+    impl::gcm::hash(h, aad.data(), aad.size(), in, len, s); // 2. Apply GHASH to [pad(aad) + pad(ciphertext) + 64-bit(aad_len * 8), 64-bit(len * 8))]
+    impl::gcm::gctr(j, in, out, len, ciph);                 // 3. Increment J0 and pass to GCTR
+    ctrf(j, s, t, sizeof(t), ciph);                         // 4. Generate full tag
 
-    if (memcmp(t, tag, tag_len)) {              // 5. Compare tag with the given
+    if (memcmp(t, tag.data(), tag.size())) {                // 5. Compare tag with the given
         zero(out, len);
         return false;
     }
