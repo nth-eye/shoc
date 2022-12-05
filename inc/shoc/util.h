@@ -200,6 +200,15 @@ constexpr void putbe(T val, byte *out)
         *out++ = val >> i;
 }
 
+template<class T>
+constexpr T getle(const byte* in)
+{
+    T val = 0;
+    for (size_t i = 0; i < sizeof(T) * 8; i += 8)
+        val |= T(*in++) << i;
+    return val;
+}
+
 /**
  * @brief Choose function, used in SHA and MD.
  */
