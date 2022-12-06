@@ -19,13 +19,13 @@ using word = uint32_t;
 struct context {
 
     static constexpr size_t key_size    = 32;
-    static constexpr size_t nonce_size  = 12;
+    static constexpr size_t iv_size     = 12;
 public:
     constexpr context() = default;
-    constexpr context(span_i<key_size> key, span_i<nonce_size> nonce) { init(key, nonce); }
+    constexpr context(span_i<key_size> key, span_i<iv_size> iv) { init(key, iv); }
     // constexpr ~context()                    { deinit(); }
 public:
-    constexpr void init(span_i<key_size> key, span_i<nonce_size> nonce);
+    constexpr void init(span_i<key_size> key, span_i<iv_size> iv);
     constexpr void deinit();
     // constexpr void encrypt(span_i<block_size> in, span_o<block_size> out);
     // constexpr void decrypt(span_i<block_size> in, span_o<block_size> out);
@@ -36,7 +36,7 @@ private:
     word state[16];
 };
 
-constexpr void context::init(span_i<key_size> key, span_i<nonce_size> nonce)
+constexpr void context::init(span_i<key_size> key, span_i<iv_size> iv)
 {
     state[0] = 0x61707865;
     state[1] = 0x3320646e;
@@ -50,7 +50,7 @@ constexpr void context::init(span_i<key_size> key, span_i<nonce_size> nonce)
 
     state[12] = 0;
 
-    ptr = nonce.data();
+    ptr = iv.data();
 
     for (size_t i = 13; i < 16; ++i, ptr += sizeof(word))
         state[i] = getle<word>(ptr);

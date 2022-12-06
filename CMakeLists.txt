@@ -21,6 +21,7 @@ add_executable(testshoc
     test/mac/hmac.cpp
     test/mode/mode.cpp
     test/otp/hotp.cpp
+    test/util.cpp
     # test/elliptic.cpp
     )
 target_include_directories(testshoc PRIVATE test)

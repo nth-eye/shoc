@@ -57,7 +57,7 @@ constexpr void md2::feed(span_i<> in)
 
 constexpr void md2::stop(span_o<hash_size> out)
 {
-    auto padding = block_size - block_idx;
+    byte padding = block_size - block_idx;
     fill(block + block_idx, padding, padding);
     step();
     feed(checksum);

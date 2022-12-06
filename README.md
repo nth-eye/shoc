@@ -29,6 +29,19 @@ Software-Header-Only-Crypto library in C++.
         - [ ] gcm
     - [x] otp
 - [ ] tests
+    - [ ] util
+        - [x] rol
+        - [x] ror
+        - [ ] copy
+        - [ ] fill
+        - [ ] zero
+        - [ ] xorb
+        - [x] bitswap
+        - [x] byteswap
+        - [ ] putle
+        - [ ] putbe
+        - [ ] getle
+        - [ ] getbe
     - [x] cipher
     - [x] ecc
     - [x] hash

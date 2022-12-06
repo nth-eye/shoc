@@ -1,7 +1,7 @@
 #ifndef SHOC_HASH_MD5_H
 #define SHOC_HASH_MD5_H
 
-#include "shoc/util.h"
+#include "shoc/hash/md4.h"
 
 namespace shoc {
 
@@ -59,12 +59,8 @@ constexpr void md5::feed(span_i<> in)
 constexpr void md5::stop(span_o<hash_size> out)
 {
     pad();
-    for (size_t i = 0, j = 0; i < state_size; ++i, j += 4) {
-        out[j + 0] = state[i] >> 0;
-        out[j + 1] = state[i] >> 8;
-        out[j + 2] = state[i] >> 16;
-        out[j + 3] = state[i] >> 24;
-    }
+    for (size_t i = 0; i < state_size; ++i)
+        putle<word>(state[i], &out[i * sizeof(word)]);
     wipe();
 }
 
@@ -82,10 +78,10 @@ constexpr void md5::pad()
     block[block_idx++] = 0x80;
 
     if (block_idx > pad_start) {
-        fill(block + block_idx, 0, block_size - block_idx);
+        fill(block + block_idx, byte(0), block_size - block_idx);
         step();
     }
-    fill(block + block_idx, 0, pad_start - block_idx);
+    fill(block + block_idx, byte(0), pad_start - block_idx);
 
     for (size_t i = 0, j = 0; i < 4; ++i, j += 8) {
         block[block_size - 8 + i] = length_low  >> j;
@@ -102,12 +98,9 @@ constexpr void md5::step()
     word d = state[3];
     word buf[16];
 
-    for (size_t i = 0, j = 0; j < block_size; ++i, j +=4) {
-        buf[i]  = block[j + 0] << 0;
-        buf[i] |= block[j + 1] << 8;
-        buf[i] |= block[j + 2] << 16;
-        buf[i] |= block[j + 3] << 24;
-    }
+    for (size_t i = 0; i < 16; ++i)
+        buf[i] = getle<word>(block + i * 4);
+
     enum {
         s11 = 7, s12 = 12,  s13 = 17, s14 = 22,
         s21 = 5, s22 = 9,   s23 = 14, s24 = 20,

@@ -37,7 +37,7 @@ constexpr void gmul(const byte* x, const byte* y, byte* z)
 {
     byte v[16];
 
-    fill(z, 0, 16);
+    fill(z, byte(0), 16);
     copy(v, y, 16);
 
     for (int i = 0; i < 16; ++i) {
@@ -175,8 +175,8 @@ constexpr bool gcm_encrypt(
     span_i<> iv,
     span_i<> aad, 
     span_o<> tag,
-    const byte *in,
-          byte *out, size_t len)
+    const byte* in,
+          byte* out, size_t len)
 {
     if (gcm_tag_length_invalid(tag.size()))
         return false;
@@ -217,8 +217,8 @@ constexpr bool gcm_decrypt(
     span_i<> iv,
     span_i<> aad, 
     span_i<> tag,
-    const byte *in,
-          byte *out, size_t len)
+    const byte* in,
+          byte* out, size_t len)
 {
     if (gcm_tag_length_invalid(tag.size()))
         return false;

@@ -2,6 +2,7 @@
 #define SHOC_MODE_CCM_H
 
 #include "shoc/mac/cbc_mac.h"
+#include "shoc/mode/ctr.h"
 
 namespace shoc {
 
@@ -41,7 +42,7 @@ constexpr void ccm_ctr(E& ciph,
 
     a_0[0] = L - 1;
     copy(&a_0[1], nonce.data(), nonce.size());
-    fill(&a_0[nonce.size() + 1], 0, L);
+    fill(&a_0[nonce.size() + 1], byte(0), L);
 
     byte buf[16];
     byte a_i[16];
@@ -55,7 +56,7 @@ constexpr void ccm_ctr(E& ciph,
         }
         *out++ = buf[idx] ^ *in++;
     }
-    fill(&a_0[nonce.size() + 1], 0, L);
+    fill(&a_0[nonce.size() + 1], byte(0), L);
     ciph.encrypt(a_0, a_0);
 }
 

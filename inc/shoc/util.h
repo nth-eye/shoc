@@ -85,18 +85,15 @@ constexpr void copy(T* dst, const T* src, size_t cnt)
 }
 
 /**
- * @brief Fill memory with given byte value.
+ * @brief Fill memory with given object value.
  * 
- * @param dst Memory to fill
- * @param val Byte value
- * @param cnt Number of bytes
+ * @tparam T Object type
+ * @param dst Pointer to objects to fill
+ * @param val Object value to fill with
+ * @param cnt Number of objects
  */
-constexpr void fill(void* dst, byte val, size_t cnt)
-{
-    std::fill_n(static_cast<byte*>(dst), cnt, val);
-}
-
-constexpr void fill(byte* dst, byte val, size_t cnt)
+template<class T>
+constexpr void fill(T* dst, const T& val, size_t cnt)
 {
     std::fill_n(dst, cnt, val);
 }
@@ -104,6 +101,7 @@ constexpr void fill(byte* dst, byte val, size_t cnt)
 /**
  * @brief Reliably zero out memory region.
  * 
+ * @tparam T Object type
  * @param dst Pointer to objects to zero out
  * @param cnt Number of objects
  */
@@ -147,11 +145,11 @@ constexpr void xorb(byte* x, const byte* y, size_t len)
  * @param x Integer to reverse
  * @return Result
  */
-template<class T>
+template<std::integral T>
 constexpr T bitswap(T x)
 {
-    auto bits = sizeof(T) * 8; 
-    auto mask = ~T(0);
+    auto bits = utl::bit_size<T>();
+    auto mask = utl::bit_full<T>();
     while (bits >>= 1) {
         mask ^= mask << bits;
         x = (x & ~mask) >> bits | (x & mask) << bits;
@@ -166,10 +164,18 @@ constexpr T bitswap(T x)
  * @param x Integer to reverse
  * @return Result
  */
-template<class T>
+template<std::integral T>
 constexpr T byteswap(T x)
 {
-    return 0; // TODO
+    if constexpr (sizeof(T) < 2)
+        return x;
+    auto bits = utl::bit_size<T>();
+    auto mask = utl::bit_full<T>();
+    while ((bits >>= 1) >= 8) {
+        mask ^= mask << bits;
+        x = (x & ~mask) >> bits | (x & mask) << bits;
+    }
+    return x;
 }
 
 /**
@@ -179,10 +185,10 @@ constexpr T byteswap(T x)
  * @param val Input integer
  * @param out Output array
  */
-template<class T>
-constexpr void putle(T val, byte *out)
+template<std::integral T>
+constexpr void putle(T val, byte* out)
 {
-    for (int i = 0; i < sizeof(T) * 8; i += 8)
+    for (size_t i = 0; i < sizeof(T) * 8; i += 8)
         *out++ = val >> i;
 }
 
@@ -193,14 +199,21 @@ constexpr void putle(T val, byte *out)
  * @param val Input integer
  * @param out Output array
  */
-template<class T>
-constexpr void putbe(T val, byte *out)
+template<std::integral T>
+constexpr void putbe(T val, byte* out)
 {
     for (int i = sizeof(T) * 8 - 8; i >= 0; i -= 8)
         *out++ = val >> i;
 }
 
-template<class T>
+/**
+ * @brief Get integer from array in little endian order.
+ * 
+ * @tparam T Integer type
+ * @param in Input array
+ * @return Result integer
+ */
+template<std::integral T>
 constexpr T getle(const byte* in)
 {
     T val = 0;
@@ -210,47 +223,27 @@ constexpr T getle(const byte* in)
 }
 
 /**
- * @brief Choose function, used in SHA and MD.
- */
-template <class T>
-constexpr T ch(T x, T y, T z)
-{ 
-    return (x & y) ^ (~x & z); 
-}
-
-/**
- * @brief Major function, used in SHA and MD.
- */
-template <class T>
-constexpr T maj(T x, T y, T z)
-{ 
-    return (x & y) ^ (x & z) ^ (y & z); 
-}
-
-/**
- * @brief Parity function, used in SHA and MD.
- */
-template <class T>
-constexpr T parity(T x, T y, T z)
-{ 
-    return x ^ y ^ z; 
-}
-
-/**
- * @brief Increment counter bytes in a block, used in block-cipher mode
- * such as CTR and GCM.
+ * @brief Get integer from array in big endian order.
  * 
- * @tparam L Length of counter in bytes, default is 4
- * @tparam B Total block length in bytes, default is 16 
- * @param block Pointer to the beginning of a block, not counter
+ * @tparam T Integer type
+ * @param in Input array
+ * @return Result integer
  */
-template<size_t L = 4, size_t B = 16>
-constexpr void incc(byte* block)
+template<std::integral T>
+constexpr T getbe(const byte* in)
 {
-    size_t i = B;
-    while (++block[--i] == 0 && i >= B - L);
+    T val = 0;
+    for (int i = sizeof(T) * 8 - 8; i >= 0; i -= 8)
+        val |= T(*in++) << i;
+    return val;
 }
 
+/**
+ * @brief CRTP base class for general consumer API, e.g. hash, mac, etc.
+ * 
+ * @tparam H Hash class
+ * @tparam N Hash size
+ */
 template<class H, size_t N>
 struct consumer {
     static constexpr auto hash_size = N;
@@ -272,8 +265,6 @@ private:
     constexpr auto impl()   { return static_cast<H*>(this); }
     friend H;
 };
-
-
 
 }
 

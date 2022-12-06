@@ -1,7 +1,7 @@
 #ifndef SHOC_HASH_SHA2_H
 #define SHOC_HASH_SHA2_H
 
-#include "shoc/util.h"
+#include "shoc/hash/md4.h"
 
 namespace shoc {
 namespace impl::sha2 {
@@ -136,10 +136,10 @@ template<type T>
 constexpr void context<T>::stop(span_o<base::hash_size> out)
 {
     pad();
-
+    // for (size_t i = 0; i < base::hash_size / sizeof(word); ++i)
+    //     putbe<word>(state[i], &out[i * sizeof(word)]);
     for (int i = 0, j = -8; i < (int) base::hash_size; ++i, j -= 8)
-        out[i] = state[i / sizeof(word)] >> (j & ((sizeof(word) * 8) - 1));
-
+        out[i] = state[i / sizeof(word)] >> (j & utl::bit_wrap<word>());
     wipe();
 }
 
@@ -159,10 +159,10 @@ constexpr void context<T>::pad()
     block[block_idx++] = 0x80;
 
     if (block_idx > pad_start) {
-        fill(block + block_idx, 0, block_size - block_idx);
+        fill(block + block_idx, byte(0), block_size - block_idx);
         step();
     }
-    fill(block + block_idx, 0, pad_start - block_idx);
+    fill(block + block_idx, byte(0), pad_start - block_idx);
 
     for (size_t i = 0, j = 0; i < sizeof(word); ++i, j += 8) {
         block[block_size - 1 - i]                   = length_low  >> j;

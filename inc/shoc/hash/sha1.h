@@ -1,7 +1,7 @@
 #ifndef SHOC_HASH_SHA1_H
 #define SHOC_HASH_SHA1_H
 
-#include "shoc/util.h"
+#include "shoc/hash/md4.h"
 
 namespace shoc {
 
@@ -43,11 +43,11 @@ private:
 
 constexpr void sha1::init()
 {
-    state[0] = 0x67452301u;
-    state[1] = 0xefcdab89u;
-    state[2] = 0x98badcfeu;
-    state[3] = 0x10325476u;
-    state[4] = 0xc3d2e1f0u;
+    state[0] = 0x67452301;
+    state[1] = 0xefcdab89;
+    state[2] = 0x98badcfe;
+    state[3] = 0x10325476;
+    state[4] = 0xc3d2e1f0;
 
     block_idx = length_high = length_low = 0;
 }
@@ -66,12 +66,8 @@ constexpr void sha1::feed(span_i<> in)
 constexpr void sha1::stop(span_o<hash_size> out)
 {
     pad();
-    for (size_t i = 0, j = 0; i < state_size; ++i, j += 4) {
-        out[j + 0] = state[i] >> 24;
-        out[j + 1] = state[i] >> 16;
-        out[j + 2] = state[i] >> 8;
-        out[j + 3] = state[i] >> 0;
-    }
+    for (size_t i = 0; i < state_size; ++i)
+        putbe<word>(state[i], &out[i * sizeof(word)]);
     wipe();
 }
 
@@ -89,10 +85,10 @@ constexpr void sha1::pad()
     block[block_idx++] = 0x80;
 
     if (block_idx > pad_start) {
-        fill(block + block_idx, 0, block_size - block_idx);
+        fill(block + block_idx, byte(0), block_size - block_idx);
         step();
     }
-    fill(block + block_idx, 0, pad_start - block_idx);
+    fill(block + block_idx, byte(0), pad_start - block_idx);
 
     for (size_t i = 0, j = 0; i < 4; ++i, j += 8) {
         block[block_size - 1 - i] = length_low  >> j;
@@ -108,12 +104,8 @@ constexpr void sha1::step()
     
     copy(var, state, countof(state));
 
-    for (size_t t = 0; t < 16; ++t) {
-        buf[t]  = block[t * 4]     << 24;
-        buf[t] |= block[t * 4 + 1] << 16;
-        buf[t] |= block[t * 4 + 2] << 8;
-        buf[t] |= block[t * 4 + 3];
-    }
+    for (size_t t = 0; t < 16; ++t)
+        buf[t] = getbe<word>(block + t * 4);
     for (size_t t = 16; t < 80; ++t)
         buf[t] = rol(buf[t-3] ^ buf[t-8] ^ buf[t-14] ^ buf[t-16], 1);
 

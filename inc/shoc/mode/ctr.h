@@ -6,6 +6,21 @@
 namespace shoc {
 
 /**
+ * @brief Increment counter bytes in a block, used in block-cipher mode
+ * such as CTR and GCM.
+ * 
+ * @tparam L Length of counter in bytes, default is 4
+ * @tparam B Total block length in bytes, deduced
+ * @param block Pointer to the beginning of a block, not counter
+ */
+template<size_t L = 4, size_t B>
+constexpr void incc(byte (&block)[B])
+{
+    size_t i = B;
+    while (i-- > B - L && ++block[i] == 0);
+}
+
+/**
  * @brief Basic counter mode function, used as a component in CTR and GCM modes. 
  * Counter size is configurable. All pointers MUST be valid.
  * 
@@ -28,7 +43,7 @@ constexpr void ctrf(span_i<E::block_size> iv, const byte* in, byte* out, size_t 
         auto idx = i % sizeof(buf);
         if (!idx) {
             ciph.encrypt(ctr, buf);
-            incc<L, E::block_size>(ctr);
+            incc<L>(ctr);
         }
         *out++ = buf[idx] ^ *in++;
     }
